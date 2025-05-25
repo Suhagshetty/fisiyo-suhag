@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+
+@keyframes float {
+  0% {
+    transform: translate(0px, 0px);
+  }
+  50% {
+    transform: translate(80px, -60px);
+  }
+  100% {
+    transform: translate(0px, 0px);
+  }
+}
+
+.blob {
+  animation: float 18s ease-in-out infinite;
+}
