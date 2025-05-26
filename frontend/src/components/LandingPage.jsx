@@ -24,24 +24,15 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = async () => {
-    if (isAuthenticated && auth0User?.sub?.startsWith("google-oauth2|")) { 
-      const userId = auth0User.sub.replace("google-oauth2|", "");
-      try {
-        const res = await fetch(`http://localhost:3000/api/users/${userId}`);
-        if (res.ok) {
-          const userData = await res.json(); 
-          navigate("/feed", { state: { user: userData } });
-        } else if (res.status === 404) { 
-          navigate("/setup");
-        } else {
-          console.error("Unexpected server response");
-        }
-      } catch (err) {
-        console.error("Error checking user:", err);
-      }
-    } else { 
-      loginWithRedirect({ appState: { returnTo: "/setup" } });
+    if (!isAuthenticated) {
+      await loginWithRedirect({
+        appState: { returnTo: "/post-login-check" },
+      });
+      return;
     }
+
+    // If already authenticated (e.g., user returns later and clicks again)
+    navigate("/post-login-check");
   };
 
   return (
