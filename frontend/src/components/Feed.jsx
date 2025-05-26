@@ -156,7 +156,7 @@ const Feed = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0">
         {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-40">
+        <header className="flex items-center justify-end px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-40">
           {/* Only show menu button on mobile */}
           <button
             onClick={toggleSidebar}
@@ -165,14 +165,7 @@ const Feed = () => {
             <Menu size={24} />
           </button>
 
-          {/* On desktop, show a placeholder or logo when there's no toggle button */}
-          <div className="hidden lg:block">
-            <span
-              className="text-xl font-light tracking-wide text-black"
-              style={{ fontFamily: "Playfair Display, serif" }}>
-              Feed
-            </span>
-          </div>
+          
 
           <div className="flex items-center space-x-4">
             {isAuthenticated && (

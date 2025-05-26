@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  userid: { type: String, required: true,  trim: true },
+  userid: { type: String, required: true, trim: true },
   name: { type: String, required: true, trim: true },
   email: {
     type: String,
@@ -53,6 +53,23 @@ const userSchema = new mongoose.Schema({
   followingUsers: [
     { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
   ],
+
+  // New fields
+  reputation: { type: Number, default: 0 },
+  badges: { type: [String], default: [] },
+  level: { type: Number, default: 1 },
+  xp: { type: Number, default: 0 }, // Experience Points
+  loginStreak: { type: Number, default: 0 },
+  lastLoginDate: { type: Date },
+  dailyActivity: {
+    type: Map,
+    of: Number, // Tracks activity count per day
+    default: {},
+  },
+  isTopUser: { type: Boolean, default: false },
+  impactScore: { type: Number, default: 0 },
+  challengesCompleted: { type: Number, default: 0 },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
