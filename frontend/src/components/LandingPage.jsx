@@ -1,4 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Lightbulb,
@@ -19,15 +20,32 @@ const LandingPage = () => {
     isLoading,
     user: auth0User,
     loginWithRedirect,
-    logout,
-    getAccessTokenSilently,
   } = useAuth0();
+  const navigate = useNavigate();
 
- 
-    
+  const handleGetStarted = async () => {
+    if (isAuthenticated && auth0User?.sub?.startsWith("google-oauth2|")) { 
+      const userId = auth0User.sub.replace("google-oauth2|", "");
+      try {
+        const res = await fetch(`http://localhost:3000/api/users/${userId}`);
+        if (res.ok) {
+          const userData = await res.json(); 
+          navigate("/feed", { state: { user: userData } });
+        } else if (res.status === 404) { 
+          navigate("/setup");
+        } else {
+          console.error("Unexpected server response");
+        }
+      } catch (err) {
+        console.error("Error checking user:", err);
+      }
+    } else { 
+      loginWithRedirect({ appState: { returnTo: "/setup" } });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#49D470]/5 via-white to-[#49D470]/5"> 
-      {/* Navigation */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
           className="absolute w-96 h-96 bg-gradient-to-r from-[#F0F0F0]/20 to-[#2EB171]/30 rounded-full blur-3xl"
@@ -75,18 +93,7 @@ const LandingPage = () => {
             </div>
             <div className="flex items-center space-x-12">
               <button
-                onClick={() =>
-                  loginWithRedirect({ appState: { returnTo: "/profile" } })
-                }
-                className="text-slate-600 font-normal cursor-pointer transition-colors text-lg tracking-wide"
-                style={{ fontFamily: "Manrope, sans-serif" }}>
-                Login
-              </button>
-
-              <button
-                onClick={() =>
-                  loginWithRedirect({ appState: { returnTo: "/setup" } })
-                }
+                onClick={handleGetStarted}
                 className="text-slate-800 font-normal cursor-pointer transition-colors text-lg tracking-wide border-b border-transparent pb-0.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}>
                 Get Started
@@ -95,7 +102,6 @@ const LandingPage = () => {
           </div>
         </div>
       </nav>
-      {/* vish#49D470 */}
       {/* Hero Section */}
       <section className="py-32 lg:py-40">
         <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
@@ -119,14 +125,6 @@ const LandingPage = () => {
               minds to accelerate research through our curated scientific
               network.
             </p>
-            <div className="flex justify-center">
-              <a
-                href="/signup"
-                className="text-black hover:text-slate-900 font-normal transition-colors text-lg tracking-wide border-b border-transparent pb-1"
-                style={{ fontFamily: "Manrope, sans-serif" }}>
-                Start Your Journey
-              </a>
-            </div>
           </div>
         </div>
       </section>
@@ -311,12 +309,12 @@ const LandingPage = () => {
               Join 142 Nobel laureates and 18,000 verified scientists shaping
               humanity's future.
             </p>
-            <a
-              href="/signup"
+            <button
+              onClick={handleGetStarted}
               className="text-slate-800 hover:text-slate-600 font-normal transition-colors text-lg tracking-wide border-b border-transparent hover:border-slate-300 pb-1"
               style={{ fontFamily: "Manrope, sans-serif" }}>
               Join Elite Network
-            </a>
+            </button>
           </div>
         </div>
       </section>

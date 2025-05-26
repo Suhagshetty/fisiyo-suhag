@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth0 } from "@auth0/auth0-react"; 
 import {
   Bookmark,
   Grid3X3,
@@ -13,6 +13,7 @@ import {
 
 const Profile = () => {
   const { user } = useAuth0();
+console.log(user);
 
   const mockPosts = [
     {
@@ -67,9 +68,7 @@ const Profile = () => {
           </div>
         </section>
 
-        {/* Profile Section */}
-        {/* Profile Section */}
-        {/* Profile Section */}
+        {/* Profile Section */} 
         <section className="relative max-w-6xl mx-auto px-6 lg:px-8">
           <div className="relative pt-24 flex items-start">
             {/* Profile Picture on left, half overlapping cover */}

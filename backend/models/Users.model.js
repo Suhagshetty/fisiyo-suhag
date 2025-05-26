@@ -1,9 +1,18 @@
 import mongoose from "mongoose";
 
-
 const userSchema = new mongoose.Schema({
   userid: { type: String, required: true, unique: true, trim: true },
   name: { type: String, required: true, trim: true },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/.+@.+\..+/, "Please enter a valid email"],
+  },
+
+  // Optional user info
   interests: { type: [String], default: [] },
   gender: {
     type: String,
@@ -13,22 +22,43 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ["user", "professor", "moderator"],
-    required: true,
     default: "user",
-  },
-  email: {
-    type: String,
     required: true,
-    unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/.+@.+\..+/, "Please enter a valid email"],
   },
+  posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post", default: [] }],
+  comments: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Comment", default: [] },
+  ],
+  savedPosts: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: [] },
+  ],
+  likedPosts: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: [] },
+  ],
+  dislikedPosts: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: [] },
+  ],
+  upvotedComments: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Comment", default: [] },
+  ],
+  downvotedComments: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Comment", default: [] },
+  ],
+  followingCommunities: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Community", default: [] },
+  ],
+  followers: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+  ],
+  followingUsers: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+  ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
 });
 
+// Auto-update updatedAt
 userSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
