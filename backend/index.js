@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Update with your client's origin
+    origin: "http://localhost:5173", 
     methods: ["POST", "GET", "PUT"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -27,15 +27,14 @@ mongoose
   .connect(MONGODB_URI)
   .then(() => {
     console.log("MongoDB connected");
-
-    // Start server after DB connection is established
+ 
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
-    process.exit(1); // Exit if cannot connect
+    process.exit(1); 
   });
 
 

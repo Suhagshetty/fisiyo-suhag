@@ -2,8 +2,7 @@ import express from "express";
 import User from "../models/Users.model.js";
 
 const router = express.Router();
-
-// Create user
+ 
 router.post("/", async (req, res) => {
   try {
     const userData = {
@@ -22,8 +21,7 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
-// Get user by ID
+ 
 router.get("/:id", async (req, res) => {
   try {
     const userId = req.params.id;

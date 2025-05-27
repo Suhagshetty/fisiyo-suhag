@@ -11,8 +11,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/.+@.+\..+/, "Please enter a valid email"],
   },
-
-  // Optional user info
+ 
   interests: { type: [String], default: [] },
   gender: {
     type: String,
@@ -53,17 +52,16 @@ const userSchema = new mongoose.Schema({
   followingUsers: [
     { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
   ],
-
-  // New fields
+ 
   reputation: { type: Number, default: 0 },
   badges: { type: [String], default: [] },
   level: { type: Number, default: 1 },
-  xp: { type: Number, default: 0 }, // Experience Points
+  xp: { type: Number, default: 0 }, 
   loginStreak: { type: Number, default: 0 },
   lastLoginDate: { type: Date },
   dailyActivity: {
     type: Map,
-    of: Number, // Tracks activity count per day
+    of: Number,
     default: {},
   },
   isTopUser: { type: Boolean, default: false },
@@ -75,7 +73,6 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 });
 
-// Auto-update updatedAt
 userSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();

@@ -1,16 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
-//test
 import {
   Paperclip,
   X,
   Hash,
   AlignLeft,
   FileText,
-  Link2,
+  MessageCircle,
+  HelpCircle,
   BarChart2,
   Smile,
   Image as ImageIcon,
 } from "lucide-react";
+
+const MAX_TITLE_LENGTH = 100;
+const MAX_CONTENT_LENGTH = {
+  post: 1000,
+  discussion: 1000,
+  qa: 1000,
+  article: 5000,
+};
+const MAX_TAGS = 5;
+const MAX_TAG_LENGTH = 20;
+const MAX_POLL_OPTIONS = 6;
 
 const CreatePost = ({ onClose, onSubmit }) => {
   const [postContent, setPostContent] = useState("");
@@ -25,31 +36,45 @@ const CreatePost = ({ onClose, onSubmit }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Validate form based on selected tab
   const validateForm = () => {
     const newErrors = {};
 
+    // Title validation
     if (!title.trim()) {
       newErrors.title = "Title is required";
+    } else if (title.length > MAX_TITLE_LENGTH) {
+      newErrors.title = `Title must be less than ${MAX_TITLE_LENGTH} characters`;
     }
 
-    if (selectedTab !== "poll" && !postContent.trim()) {
-      newErrors.content = "Content is required";
+    // Content validation for non-poll types
+    if (selectedTab !== "poll") {
+      if (!postContent.trim()) {
+        newErrors.content = "Content is required";
+      } else if (postContent.length > MAX_CONTENT_LENGTH[selectedTab]) {
+        newErrors.content = `Content must be less than ${MAX_CONTENT_LENGTH[selectedTab]} characters (${postContent.length}/${MAX_CONTENT_LENGTH[selectedTab]})`;
+      }
     }
 
+    // Poll validation
     if (selectedTab === "poll") {
       const validOptions = pollOptions.filter((opt) => opt.trim()).length;
       if (validOptions < 2) {
         newErrors.poll = "At least 2 options are required";
       }
+
+      // Validate individual poll options
+      pollOptions.forEach((opt, index) => {
+        if (opt.length > 100) {
+          newErrors.poll = `Option ${
+            index + 1
+          } must be less than 100 characters`;
+        }
+      });
     }
 
-    if (selectedTab === "link" && postContent.trim()) {
-      try {
-        new URL(postContent);
-      } catch {
-        newErrors.content = "Please enter a valid URL";
-      }
+    // Tag validation
+    if (tags.length > MAX_TAGS) {
+      newErrors.tags = `Maximum ${MAX_TAGS} tags allowed`;
     }
 
     setErrors(newErrors);
@@ -63,9 +88,9 @@ const CreatePost = ({ onClose, onSubmit }) => {
     setIsSubmitting(true);
     try {
       const postData = {
-        title,
-        content: postContent,
-        tags,
+        title: title.trim(),
+        content: postContent.trim(),
+        tags: tags.slice(0, MAX_TAGS),
         type: selectedTab,
         ...(selectedTab === "poll" && {
           options: pollOptions.filter((opt) => opt.trim()),
@@ -97,10 +122,36 @@ const CreatePost = ({ onClose, onSubmit }) => {
 
   const addTag = (e) => {
     if (e.key === "Enter" && currentTag.trim()) {
-      e.preventDefault(); // Prevent form submission
-      const normalizedTag = currentTag.trim().toLowerCase();
+      e.preventDefault();
+      const normalizedTag = currentTag
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+      if (tags.length >= MAX_TAGS) {
+        setErrors({ ...errors, tags: `Maximum ${MAX_TAGS} tags allowed` });
+        return;
+      }
+
+      if (normalizedTag.length > MAX_TAG_LENGTH) {
+        setErrors({
+          ...errors,
+          tags: `Tags must be less than ${MAX_TAG_LENGTH} characters`,
+        });
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9-]+$/.test(normalizedTag)) {
+        setErrors({
+          ...errors,
+          tags: "Tags can only contain letters, numbers, and hyphens",
+        });
+        return;
+      }
+
       if (!tags.includes(normalizedTag)) {
         setTags([...tags, normalizedTag]);
+        setErrors({ ...errors, tags: null });
       }
       setCurrentTag("");
     }
@@ -112,12 +163,12 @@ const CreatePost = ({ onClose, onSubmit }) => {
 
   const handlePollOptionChange = (index, value) => {
     const newOptions = [...pollOptions];
-    newOptions[index] = value;
+    newOptions[index] = value.slice(0, 100);
     setPollOptions(newOptions);
   };
 
   const addPollOption = () => {
-    if (pollOptions.length < 6) {
+    if (pollOptions.length < MAX_POLL_OPTIONS) {
       setPollOptions([...pollOptions, ""]);
     }
   };
@@ -132,49 +183,50 @@ const CreatePost = ({ onClose, onSubmit }) => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.match("image.*")) {
-        setErrors({ ...errors, image: "Please select an image file" });
-        return;
-      }
+    if (!file) return;
 
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors({ ...errors, image: "Image must be less than 5MB" });
-        return;
-      }
-
-      setImage(file);
-      setErrors({ ...errors, image: null });
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file.type.startsWith("image/")) {
+      setErrors({ ...errors, image: "Please select an image file" });
+      return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors({ ...errors, image: "Image must be less than 5MB" });
+      return;
+    }
+
+    setImage(file);
+    setErrors({ ...errors, image: null });
+
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImage(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Close on Escape key
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
+    const handleKeyDown = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
+
+  const getContentPlaceholder = () => {
+    switch (selectedTab) {
+      case "qa":
+        return "Ask your question...";
+      case "discussion":
+        return "Start a discussion...";
+      case "article":
+        return "Write your article content here...";
+      default:
+        return "What are your thoughts?";
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -189,47 +241,29 @@ const CreatePost = ({ onClose, onSubmit }) => {
         </div>
 
         <div className="p-4">
-          <div className="flex border-b border-gray-200 mb-4">
-            <button
-              type="button"
-              className={`px-4 py-2 font-medium text-sm flex items-center gap-2 ${
-                selectedTab === "post"
-                  ? "text-gray-900 border-b-2 border-gray-500"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setSelectedTab("post")}>
-              <AlignLeft size={16} /> Post
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 font-medium text-sm flex items-center gap-2 ${
-                selectedTab === "article"
-                  ? "text-gray-900 border-b-2 border-gray-500"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setSelectedTab("article")}>
-              <FileText size={16} /> Article
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 font-medium text-sm flex items-center gap-2 ${
-                selectedTab === "link"
-                  ? "text-gray-900 border-b-2 border-gray-500"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setSelectedTab("link")}>
-              <Link2 size={16} /> Link
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 font-medium text-sm flex items-center gap-2 ${
-                selectedTab === "poll"
-                  ? "text-gray-900 border-b-2 border-gray-500"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setSelectedTab("poll")}>
-              <BarChart2 size={16} /> Poll
-            </button>
+          <div className="flex border-b border-gray-200 mb-4 overflow-x-auto">
+            {["post", "article", "discussion", "qa", "poll"].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`px-4 py-2 font-medium text-sm flex items-center gap-2 shrink-0 ${
+                  selectedTab === tab
+                    ? "text-gray-900 border-b-2 border-gray-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setSelectedTab(tab)}>
+                {
+                  {
+                    post: <AlignLeft size={16} />,
+                    article: <FileText size={16} />,
+                    discussion: <MessageCircle size={16} />,
+                    qa: <HelpCircle size={16} />,
+                    poll: <BarChart2 size={16} />,
+                  }[tab]
+                }
+                {tab.toUpperCase()}
+              </button>
+            ))}
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -242,80 +276,47 @@ const CreatePost = ({ onClose, onSubmit }) => {
                 } rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500`}
                 value={title}
                 onChange={(e) => {
-                  setTitle(e.target.value);
+                  setTitle(e.target.value.slice(0, MAX_TITLE_LENGTH));
                   if (errors.title) setErrors({ ...errors, title: null });
                 }}
-                maxLength={100}
               />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-              )}
+              <div className="mt-1 flex justify-between text-sm text-gray-500">
+                {errors.title ? (
+                  <span className="text-red-600">{errors.title}</span>
+                ) : (
+                  <span>&nbsp;</span>
+                )}
+                <span>
+                  {title.length}/{MAX_TITLE_LENGTH}
+                </span>
+              </div>
             </div>
 
-            {selectedTab === "post" && (
+            {selectedTab !== "poll" && (
               <div className="mb-4">
                 <textarea
-                  placeholder="What are your thoughts?"
+                  placeholder={getContentPlaceholder()}
                   className={`w-full bg-white border ${
                     errors.content ? "border-red-500" : "border-gray-300"
                   } rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 min-h-[150px]`}
                   value={postContent}
                   onChange={(e) => {
-                    setPostContent(e.target.value);
-                    if (errors.content) setErrors({ ...errors, content: null });
-                  }}
-                  maxLength={1000}
-                />
-                {errors.content && (
-                  <p className="mt-1 text-sm text-red-600">{errors.content}</p>
-                )}
-              </div>
-            )}
-
-            {selectedTab === "article" && (
-              <div className="mb-4">
-                <textarea
-                  placeholder="Write your article content here..."
-                  className={`w-full bg-white border ${
-                    errors.content ? "border-red-500" : "border-gray-300"
-                  } rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 min-h-[250px]`}
-                  value={postContent}
-                  onChange={(e) => {
-                    setPostContent(e.target.value);
-                    if (errors.content) setErrors({ ...errors, content: null });
-                  }}
-                  maxLength={5000}
-                />
-                {errors.content && (
-                  <p className="mt-1 text-sm text-red-600">{errors.content}</p>
-                )}
-              </div>
-            )}
-
-            {selectedTab === "link" && (
-              <div className="mb-4">
-                <input
-                  type="url"
-                  placeholder="Paste link URL"
-                  className={`w-full bg-white border ${
-                    errors.content ? "border-red-500" : "border-gray-300"
-                  } rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 mb-3`}
-                  value={postContent}
-                  onChange={(e) => {
-                    setPostContent(e.target.value);
+                    setPostContent(
+                      e.target.value.slice(0, MAX_CONTENT_LENGTH[selectedTab])
+                    );
                     if (errors.content) setErrors({ ...errors, content: null });
                   }}
                 />
-                {errors.content && (
-                  <p className="mt-1 -mt-2 mb-2 text-sm text-red-600">
-                    {errors.content}
-                  </p>
-                )}
-                <textarea
-                  placeholder="Add a description (optional)"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 min-h-[100px]"
-                  maxLength={500}
-                />
+                <div className="mt-1 flex justify-between text-sm text-gray-500">
+                  {errors.content ? (
+                    <span className="text-red-600">{errors.content}</span>
+                  ) : (
+                    <span>&nbsp;</span>
+                  )}
+                  <span>
+                    {postContent.length}/{MAX_CONTENT_LENGTH[selectedTab]}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -328,15 +329,12 @@ const CreatePost = ({ onClose, onSubmit }) => {
                         type="text"
                         placeholder={`Option ${index + 1}`}
                         className={`flex-1 bg-white border ${
-                          errors.poll && !option.trim()
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } rounded-lg px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"`}
+                          errors.poll ? "border-red-500" : "border-gray-300"
+                        } rounded-lg px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500`}
                         value={option}
                         onChange={(e) =>
                           handlePollOptionChange(index, e.target.value)
                         }
-                        maxLength={100}
                       />
                       {pollOptions.length > 2 && (
                         <button
@@ -349,11 +347,11 @@ const CreatePost = ({ onClose, onSubmit }) => {
                     </div>
                   ))}
                 </div>
-                {pollOptions.length < 6 && (
+                {pollOptions.length < MAX_POLL_OPTIONS && (
                   <button
                     type="button"
                     onClick={addPollOption}
-                    className="text-gray-500 text-sm font-medium hover:text-gray-500 flex items-center">
+                    className="text-gray-500 text-sm font-medium hover:text-gray-700 flex items-center">
                     <span className="mr-1">+</span> Add option
                   </button>
                 )}
@@ -381,8 +379,7 @@ const CreatePost = ({ onClose, onSubmit }) => {
               </div>
             )}
 
-            {/* Image upload and preview */}
-            {(selectedTab === "post" || selectedTab === "article") && (
+            {selectedTab !== "poll" && (
               <div className="mb-4">
                 <input
                   type="file"
@@ -391,7 +388,7 @@ const CreatePost = ({ onClose, onSubmit }) => {
                   onChange={handleImageChange}
                   className="hidden"
                 />
-                {imagePreview ? (
+                {imagePreview && (
                   <div className="relative mb-2">
                     <img
                       src={imagePreview}
@@ -405,12 +402,17 @@ const CreatePost = ({ onClose, onSubmit }) => {
                       <X size={16} />
                     </button>
                   </div>
-                ) : (
-                  " "
                 )}
                 {errors.image && (
                   <p className="mt-1 text-sm text-red-600">{errors.image}</p>
                 )}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-2">
+                  <ImageIcon size={16} />
+                  {image ? "Change image" : "Add image"}
+                </button>
               </div>
             )}
 
@@ -419,13 +421,21 @@ const CreatePost = ({ onClose, onSubmit }) => {
                 <Hash size={16} className="text-gray-500 mr-2" />
                 <input
                   type="text"
-                  placeholder="Add tags (press Enter to add)"
+                  placeholder={`Add tags (max ${MAX_TAGS}, press Enter to add)`}
                   className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none"
                   value={currentTag}
                   onChange={(e) => setCurrentTag(e.target.value)}
                   onKeyDown={addTag}
-                  maxLength={20}
+                  maxLength={MAX_TAG_LENGTH}
                 />
+              </div>
+              <div className="mt-1 flex justify-between">
+                {errors.tags && (
+                  <span className="text-red-600 text-sm">{errors.tags}</span>
+                )}
+                <span className="text-sm text-gray-500">
+                  {tags.length}/{MAX_TAGS}
+                </span>
               </div>
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -448,34 +458,26 @@ const CreatePost = ({ onClose, onSubmit }) => {
 
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
               <div className="flex space-x-2">
-                {(selectedTab === "post" || selectedTab === "article") && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current.click()}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                      <ImageIcon size={20} />
-                    </button>
-                    <button
-                      type="button"
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                      <Paperclip size={20} />
-                    </button>
-                  </>
-                )}
                 <button
                   type="button"
                   className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
                   <Smile size={20} />
                 </button>
+                {selectedTab !== "poll" && (
+                  <button
+                    type="button"
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+                    <Paperclip size={20} />
+                  </button>
+                )}
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className={`px-6 py-2 rounded-full cursor-pointer font-medium ${
                   isSubmitting
-                    ? "bg-black/70 text-white cursor-not-allowed"
-                    : "bg-gray-600 hover:bg-black text-white"
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-gray-800 hover:bg-black text-white"
                 }`}>
                 {isSubmitting ? "Posting..." : "Post"}
               </button>

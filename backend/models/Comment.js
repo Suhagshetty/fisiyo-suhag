@@ -13,7 +13,7 @@ const commentSchema = new mongoose.Schema({
   },
   post: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "CommunityPost", // Or "Post" if using general pos
+    ref: "CommunityPost", 
     required: true,
   },
   parentComment: {
