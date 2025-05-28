@@ -3,19 +3,14 @@ import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation } from "react-router-dom";
 import {
-  Bookmark,
-  Grid3X3,
-  Clock,
+  Bookmark, 
   Settings,
-  MessageCircle,
-  Users,
-  Award,
-  ExternalLink,
+  MessageCircle, 
+  Award, 
   Calendar,
   Link as LinkIcon,
   MapPin,
-  BarChart2,
-  MoreHorizontal,
+  BarChart2, 
   Star,
   Trophy,
   Zap,
@@ -27,6 +22,8 @@ import {
 const Profile = () => {
   const { user } = useAuth0();
 
+  // Nitya, This is mock user data for frontend development only
+  // Will be replaced with real API data once backend is ready
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState({
     name: "Vishwanath Gowda",
@@ -90,7 +87,7 @@ const Profile = () => {
           className="w-full h-48 bg-cover bg-center relative overflow-hidden"
           style={{
             backgroundImage:
-                "url('https://live.staticflickr.com/65535/52259221868_53dae692b6_h.jpg')",
+              "url('https://live.staticflickr.com/65535/52259221868_53dae692b6_h.jpg')",
           }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/5 to-transparent"></div>
         </div>
