@@ -62,8 +62,7 @@ const ProfileSetup = () => {
       interests: formData.interests,
     };
 
-    try {
-      // First, create or update the user
+    try { 
       const response = await fetch("http://localhost:3000/api/users", {
         method: "POST",
         headers: {
@@ -78,8 +77,7 @@ const ProfileSetup = () => {
           `HTTP error! status: ${response.status} - ${errorText}`
         );
       }
-
-      // Now fetch the user details using the user ID
+ 
       const res = await fetch(`http://localhost:3000/api/users/${userId}`);
       if (!res.ok) {
         const errorText = await res.text();
@@ -91,16 +89,13 @@ const ProfileSetup = () => {
       const userData = await res.json();
       console.log("User profile saved and fetched:", userData);
 
-      // Navigate to /feed with user data
+      
       navigate("/feed", { state: { user: userData } });
     } catch (err) {
-      console.error("Submission failed:", err.message);
-      // Optionally show error to user
+      console.error("Submission failed:", err.message); 
     }
   };
 
-
-  // Utility to map displayed roles to schema values
   const mapRole = (displayedRole) => {
     switch (displayedRole) {
       case "Student/Enthu":
@@ -116,7 +111,6 @@ const ProfileSetup = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#49D470]/5 via-white to-[#49D470]/8">
-      {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute w-64 h-64 bg-gradient-to-r from-[#49D470]/10 to-transparent rounded-full blur-3xl"
@@ -136,7 +130,6 @@ const ProfileSetup = () => {
         />
       </div>
 
-      {/* Welcome Header */}
       {!formData.role ? (
         <div className="relative z-10 pt-15 pb-8">
           <div className="max-w-4xl mx-auto px-6 text-center">
@@ -160,9 +153,8 @@ const ProfileSetup = () => {
         " "
       )}
 
-      {/* Conditional Content */}
-      {!formData.role ? (
-        /* Role Selection Step */
+
+      {!formData.role ? ( 
         <div className="relative z-10 max-w-4xl mx-auto px-6 pb-24">
           <div className="backdrop-blur-sm rounded-3xl p-12 border border-white/50">
             <label
@@ -210,8 +202,7 @@ const ProfileSetup = () => {
             </div>
           </div>
         </div>
-      ) : (
-        /* Interests Selection Step */
+      ) : ( 
         <div className="relative z-10 max-w-4xl mx-auto pt-8 pb-24">
           <div className="space-y-12">
             <div className="backdrop-blur-sm flex justify-center items-center flex-wrap rounded-3xl">

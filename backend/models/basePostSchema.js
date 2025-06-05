@@ -113,26 +113,4 @@ Poll.schema.index({ endsAt: 1 });
 
 export { Post, Article, Discussion, QnA, Poll };
 
-
-
-// Creating a poll
-// const newPoll = new Poll({
-//   author: user._id,
-//   community: community._id,
-//   question: "Favorite frontend framework?",
-//   options: [
-//     { text: "React" },
-//     { text: "Vue" },
-//     { text: "Angular" }
-//   ],
-//   endsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 1 week
-// });
-
-// // Creating an article
-// const newArticle = new Article({
-//   author: user._id,
-//   community: community._id,
-//   title: "Modern Web Development",
-//   content: "...long article content...",
-//   featuredImage: "https://example.com/image.jpg"
-// });
+ 

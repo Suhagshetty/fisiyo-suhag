@@ -30,8 +30,7 @@ const LandingPage = () => {
       });
       return;
     }
-
-    // If already authenticated (e.g., user returns later and clicks again)
+ 
     navigate("/post-login-check");
   };
 

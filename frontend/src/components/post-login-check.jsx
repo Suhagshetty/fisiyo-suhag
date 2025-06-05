@@ -9,36 +9,30 @@ const PostLoginCheck = () => {
   const [isTyping, setIsTyping] = useState(true);
   const [animationCompleted, setAnimationCompleted] = useState(false);
   const fullText = "FISIYO";
-  const typingSpeed = 150; // ms per character
-  const pauseDuration = 1000; // ms to pause between animations
-  const eraseSpeed = 100; // ms per character when erasing
-
-  // Typing/erasing animation effect
+  const typingSpeed = 150;  
+  const pauseDuration = 1000;  
+  const eraseSpeed = 100;  
+ 
   useEffect(() => {
     let timer;
 
-    if (isTyping) {
-      // Typing animation
+    if (isTyping) { 
       if (displayText.length < fullText.length) {
         timer = setTimeout(() => {
           setDisplayText(fullText.substring(0, displayText.length + 1));
         }, typingSpeed);
-      } else {
-        // Switch to erasing after pause
+      } else { 
         timer = setTimeout(() => {
           setIsTyping(false);
         }, pauseDuration);
       }
-    } else {
-      // Erasing animation
+    } else { 
       if (displayText.length > 0) {
         timer = setTimeout(() => {
           setDisplayText(displayText.substring(0, displayText.length - 1));
         }, eraseSpeed);
-      } else {
-        // Animation cycle completed
-        setAnimationCompleted(true);
-        // Start next cycle immediately
+      } else { 
+        setAnimationCompleted(true); 
         timer = setTimeout(() => {
           setIsTyping(true);
         }, 200);
@@ -47,8 +41,7 @@ const PostLoginCheck = () => {
 
     return () => clearTimeout(timer);
   }, [displayText, isTyping]);
-
-  // Check user only after first animation completes and Auth0 is ready
+ 
   useEffect(() => {
     if (!isAuthenticated || isLoading || !animationCompleted) return;
 

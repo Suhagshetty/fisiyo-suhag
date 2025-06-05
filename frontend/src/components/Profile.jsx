@@ -22,7 +22,7 @@ import {
 const Profile = () => {
   const { user } = useAuth0();
 
-  // Nitya, This is mock user data for frontend development only
+  //This is mock user data for frontend development only
   // Will be replaced with real API data once backend is ready
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState({
@@ -73,15 +73,14 @@ const Profile = () => {
       upvotes: 231,
       comments: 42,
     },
-  ];
+  ]; 
 
-  // Calculate years since joining (for academic profile)
+
   const joinDate = new Date(currentUser.createdAt);
   const yearsActive = new Date().getFullYear() - joinDate.getFullYear();
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      {/* Cover Section */}
+    <div className="min-h-screen bg-white text-black"> 
       <section className="relative">
         <div
           className="w-full h-48 bg-cover bg-center relative overflow-hidden"
@@ -91,12 +90,9 @@ const Profile = () => {
           }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/5 to-transparent"></div>
         </div>
-      </section>
-
-      {/* Profile Section */}
+      </section> 
       <section className="relative max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-end justify-between">
-          {/* Profile Picture */}
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-end justify-between"> 
           <div className="absolute sm:relative left-4 sm:left-0 -top-16 sm:-top-16 w-32 h-32 sm:w-40 sm:h-40 rounded-full shadow-lg overflow-hidden bg-gray-200">
             <img
               src={user?.picture || "https://via.placeholder.com/150"}
@@ -109,8 +105,7 @@ const Profile = () => {
               </div>
             )}
           </div>
-
-          {/* Profile Actions */}
+ 
           <div className="ml-auto mt-4 sm:mt-0 flex space-x-3">
             <button className="flex items-center space-x-1 px-4 py-2 bg-white hover:bg-gray-100 rounded-full transition-colors border border-gray-300 text-sm font-medium">
               <Settings className="w-4 h-4" strokeWidth={1.5} />
@@ -122,8 +117,7 @@ const Profile = () => {
             </button>
           </div>
         </div>
-
-        {/* Profile Details */}
+ 
         <div className="mt-16 sm:mt-6 space-y-4">
           <div>
             <h1 className="text-2xl font-bold">{currentUser.name}</h1>
@@ -144,8 +138,7 @@ const Profile = () => {
                 currentUser.interests.slice(0, 3).join(", ") +
                 "."}
           </p>
-
-          {/* Interests with icons */}
+ 
           <div className="flex flex-wrap gap-2">
             {currentUser.interests.map((interest, index) => (
               <span
@@ -159,8 +152,7 @@ const Profile = () => {
                 )}
                 {interest === "Artificial Intelligence" && (
                   <Cpu className="w-4 h-4 mr-1" />
-                )}
-                {/* {interest === "Robotics" && <Robot className="w-4 h-4 mr-1" />} */}
+                )} 
                 {interest === "Materials Science" && (
                   <Zap className="w-4 h-4 mr-1" />
                 )}
@@ -168,8 +160,7 @@ const Profile = () => {
               </span>
             ))}
           </div>
-
-          {/* Profile meta info */}
+ 
           <div className="flex flex-wrap gap-y-1 text-gray-500 text-sm">
             <div className="flex items-center mr-4">
               <MapPin className="w-4 h-4 mr-1" />
@@ -183,8 +174,7 @@ const Profile = () => {
               </span>
             </div>
           </div>
-
-          {/* Academic stats */}
+ 
           <div className="flex space-x-5 pt-2">
             <div className="flex items-center">
               <span className="font-bold mr-1">12</span>
@@ -199,8 +189,7 @@ const Profile = () => {
               <span className="text-gray-600 text-sm">Collaborators</span>
             </div>
           </div>
-
-          {/* Reputation and activity */}
+ 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3">
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-gray-500 text-sm">Reputation</div>
@@ -223,8 +212,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
-
-        {/* Tabs */}
+ 
         <div className="flex border-b border-gray-200 mt-4">
           {["Posts", "Publications", "Collaborations", "Saved"].map(
             (tab, index) => (
@@ -241,8 +229,7 @@ const Profile = () => {
           )}
         </div>
       </section>
-
-      {/* Content Section */}
+      
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
         {mockPosts.map((post, index) => (
           <div
@@ -309,8 +296,7 @@ const Profile = () => {
             </div>
           </div>
         ))}
-
-        {/* Empty state for challenges */}
+ 
         {currentUser.challengesCompleted === 0 && (
           <div className="border border-gray-200 rounded-md p-6 text-center mt-6">
             <Trophy className="w-10 h-10 mx-auto text-gray-300 mb-3" />
