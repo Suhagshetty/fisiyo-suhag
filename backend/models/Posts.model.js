@@ -2,24 +2,17 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", 
-    },
-    community: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Community", 
-    },
     title: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 150,
+      maxlength: 100,
     },
     description: {
       type: String,
+      required: true,
       trim: true,
-      maxlength: 5000,
+      maxlength: 1000,
     },
     tags: [
       {
@@ -33,6 +26,20 @@ const postSchema = new mongoose.Schema(
         maxlength: 30,
       },
     ],
+    imageUrl: [
+      {
+        type: String, // stored as uploaded filename (e.g., "abc123.jpg")
+      },
+    ],
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    userHandle: { type: String, required: true, trim: true, maxlength: 100 },
+    community: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Community",
+    },
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -43,28 +50,19 @@ const postSchema = new mongoose.Schema(
       upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
       downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
-    likes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }, 
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
-    timestamps: true,
+    timestamps: true, // adds createdAt and updatedAt automatically
   }
 );
- 
-postSchema.pre("save", function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
- 
+
+// Indexes
 postSchema.index({ author: 1, community: 1 });
 postSchema.index({ createdAt: -1 });
 
 const Post = mongoose.model("Post", postSchema);
-
 export default Post;

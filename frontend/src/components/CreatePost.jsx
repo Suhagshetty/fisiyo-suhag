@@ -18,6 +18,8 @@ const CreatePost = ({
   const location = useLocation();
  
   const currentUser = location.state?.user;
+  console.log(currentUser);
+  
 
   const [postContent, setPostContent] = useState("");
   const [title, setTitle] = useState("");
@@ -72,8 +74,8 @@ const CreatePost = ({
 
     setIsSubmitting(true);
     try {
-      let uploadedImageUrl = null;
- 
+      let imageUrls = []; // Initialize as empty array
+
       if (image) {
         const formData = new FormData();
         formData.append("file", image);
@@ -84,19 +86,30 @@ const CreatePost = ({
           { headers: { "Content-Type": "multipart/form-data" } }
         );
 
-        uploadedImageUrl = uploadResponse.data.downloadUrl;
+        const uploadedImageUrl = uploadResponse.data.downloadUrl;
         console.log("Uploaded image URL:", uploadedImageUrl);
+
+        // Only add to array if upload was successful and we have a valid URL
+        if (uploadedImageUrl && uploadedImageUrl.includes("uploads/")) {
+          const filename = uploadedImageUrl.split("uploads/")[1];
+          if (filename) {
+            imageUrls.push(filename);
+          }
+        }
       }
 
       const postData = {
         title: title.trim(),
         description: postContent.trim(),
         tags: tags.slice(0, MAX_TAGS),
-        imageUrl: uploadedImageUrl?.split("uploads/")[1] || null,
+        imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
+        author: currentUser._id,
+        userHandle: currentUser.name
+        
       };
 
       console.log("Final post data:", postData);
- 
+
       const response = await axios.post(
         "http://localhost:3000/api/create-post",
         postData
@@ -227,9 +240,9 @@ const CreatePost = ({
     <div
       className={`bg-white ${
         isModal ? "rounded-lg border border-gray-200 shadow-xl" : ""
-      } w-full ${
-        isModal ? "max-w-2xl max-h-[90vh]" : "min-h-screen"
-      } overflow-y-auto`}>
+      } w-full ${isModal ? "max-w-2xl max-h-screen" : "min-h-screen"} ${
+        isModal ? "overflow-hidden" : "overflow-y-auto"
+      }`}>
       <div
         className={`${
           isModal

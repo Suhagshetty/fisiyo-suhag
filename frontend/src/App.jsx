@@ -6,6 +6,8 @@ import ProfileSetup from "./components/ProfileSetup";
 import Profile from "./components/Profile";
 import PostLoginCheck from "./components/post-login-check";
 import CreatePost from "./components/CreatePost";
+import CommunityCreator from "./components/communitySetup";
+import PostDetail from "./components/PostDetail";
 import Explore from "./components/Explore";
 
 function App() {
@@ -25,13 +27,11 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/post-login-check" element={<PostLoginCheck />} />
         <Route path="/explore" element={<Explore />} />
-        {/* Full-screen CreatePost when accessed directly */}
-        {!isModal && (
-          <Route
-            path="/compose/post"
-            element={<CreatePost isModal={false} />}
-          />
-        )}
+        <Route path="/community-setup" element={<CommunityCreator />} />
+
+        {/* Full-screen routes when accessed directly (not as modals) */}
+        <Route path="/post/:postId" element={<PostDetail />} />
+        <Route path="/compose/post" element={<CreatePost isModal={false} />} />
       </Routes>
 
       {/* Modal routes - only render when modal state is present */}
@@ -41,6 +41,15 @@ function App() {
             path="/compose/post"
             element={
               <CreatePost
+                isModal={true}
+                backgroundLocation={backgroundLocation}
+              />
+            }
+          />
+          <Route
+            path="/post/:postId"
+            element={
+              <PostDetail
                 isModal={true}
                 backgroundLocation={backgroundLocation}
               />
