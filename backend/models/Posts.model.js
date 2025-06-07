@@ -46,10 +46,18 @@ const postSchema = new mongoose.Schema(
         ref: "Comment",
       },
     ],
-    votes: {
-      upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-      downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    },
+    upvotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Reference to User model if you have one
+      },
+    ],
+    downvotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Reference to User model if you have one
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

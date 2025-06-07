@@ -241,7 +241,7 @@ const CreatePost = ({
       className={`bg-white ${
         isModal ? "rounded-lg border border-gray-200 shadow-xl" : ""
       } w-full ${isModal ? "max-w-2xl max-h-screen" : "min-h-screen"} ${
-        isModal ? "overflow-hidden" : "overflow-y-auto"
+        isModal ? "overflow-scroll" : "overflow-y-auto"
       }`}>
       <div
         className={`${

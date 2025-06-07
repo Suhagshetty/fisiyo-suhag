@@ -21,6 +21,8 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const [voted, setVoted] = useState(null);
   const [commentVotes, setCommentVotes] = useState({});
   const [comments, setComments] = useState([]);
+  const [voteCount, setVoteCount] = useState(0);
+  
 
   // Fetch post data if not provided via state (direct URL access)
   useEffect(() => {
@@ -38,6 +40,10 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
               voteCount: Math.floor(Math.random() * 100) + 1,
             }))
           );
+          // Initialize vote count from fetched post
+          setVoteCount(
+            (data.upvotes?.length || 0) - (data.downvotes?.length || 0)
+          );
         } catch (err) {
           console.error("Error fetching post:", err);
         } finally {
@@ -52,9 +58,39 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           voteCount: Math.floor(Math.random() * 100) + 1,
         }))
       );
+      // Initialize vote count from existing post
+      setVoteCount((post.upvotes?.length || 0) - (post.downvotes?.length || 0));
       setLoading(false);
     }
   }, [post, postId]);
+
+  // Load user's existing vote for this post
+  useEffect(() => {
+    const loadUserVote = async () => {
+      if ((user?._id || user?.sub) && post?._id) {
+        try {
+          const userId = user?._id || user?.sub;
+          const response = await fetch(
+            `http://localhost:3000/api/posts/votes/${userId}`
+          );
+          if (response.ok) {
+            const userVotes = await response.json();
+            if (userVotes[post._id]) {
+              setVoted(userVotes[post._id]);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading user vote:", error);
+        }
+      }
+    };
+
+    if (post) {
+      // Initialize vote count
+      setVoteCount((post.upvotes?.length || 0) - (post.downvotes?.length || 0));
+      loadUserVote();
+    }
+  }, [post, user]);
 
   const handleClose = () => {
     if (isModal && backgroundLocation) {
@@ -66,13 +102,75 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     }
   };
 
-  const handleVote = (type) => {
-    if (voted === type) {
-      setVoted(null);
-    } else {
-      setVoted(type);
+  // Enhanced vote handling similar to Feed component
+ const handleVote = async (voteType) => {
+    if (!user || !post) return;
+
+    try {
+      const currentVote = voted;
+      const currentCount = voteCount;
+      let newCount = currentCount;
+      let newVoteType = null;
+
+      // Calculate vote changes
+      if (currentVote === "up" && voteType === "up") {
+        newCount = currentCount - 1;
+        newVoteType = null;
+      } else if (currentVote === "up" && voteType === "down") {
+        newCount = currentCount - 2;
+        newVoteType = "down";
+      } else if (currentVote === "down" && voteType === "up") {
+        newCount = currentCount + 2;
+        newVoteType = "up";
+      } else if (currentVote === "down" && voteType === "down") {
+        newCount = currentCount + 1;
+        newVoteType = null;
+      } else if (!currentVote && voteType === "up") {
+        newCount = currentCount + 1;
+        newVoteType = "up";
+      } else if (!currentVote && voteType === "down") {
+        newCount = currentCount - 1;
+        newVoteType = "down";
+      }
+
+      // Optimistic UI update
+      setVoteCount(newCount);
+      setVoted(newVoteType);
+
+      // Send request to backend
+      const response = await fetch(
+        `http://localhost:3000/api/posts/${post._id}/vote`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            voteType: newVoteType,
+            userId: user?._id || user?.sub,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        // Revert on failure
+        setVoteCount(currentCount);
+        setVoted(currentVote);
+        throw new Error("Failed to update vote");
+      }
+
+      // Update with server response
+      const updatedPost = await response.json();
+      const actualCount = updatedPost.upvotes - updatedPost.downvotes;
+      setVoteCount(actualCount);
+      setPost(prev => ({
+        ...prev,
+        upvotes: updatedPost.upvotes,
+        downvotes: updatedPost.downvotes
+      }));
+    } catch (error) {
+      console.error("Error voting:", error);
     }
   };
+
 
   const handleCommentVote = (commentId, voteType) => {
     setCommentVotes((prev) => {
@@ -128,31 +226,13 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     );
   }
 
-  const voteCount = 142 + (voted === "up" ? 1 : voted === "down" ? -1 : 0);
-
   const content = (
     <div
       className={`${
         isModal ? "w-full max-w-4xl m-4" : "max-w-4xl mx-auto"
       } p-4`}>
-      {/* <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={handleClose}
-          className="flex items-center gap-2 text-[#818384] hover:text-white">
-          <ArrowLeft size={20} />
-          {isModal ? "Close" : "Back to Feed"}
-        </button>
-        {isModal && (
-          <button
-            onClick={handleClose}
-            className="text-[#818384] hover:text-white p-2 rounded-full hover:bg-[#272729]">
-            <X size={20} />
-          </button>
-        )}
-      </div> */}
-
       {/* Post Content */}
-      <div className="bg-[#0A0A0A]  rounded-2xl">
+      <div className="bg-[#0A0A0A] rounded-2xl">
         <div className="p-2">
           <div className="mb-4 flex justify-between">
             <div>
@@ -161,12 +241,12 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
               </span>
               <br />
               <span className="text-base text-[#818384]">
-                 e/
+                e/
                 {(post.userHandle || "anonymous")
                   .toLowerCase()
                   .replace(/\s+/g, "")}
               </span>
-                  <span className="text-[#818384] text-sm mx-2">• 51m ago</span>
+              <span className="text-[#818384] text-sm mx-2">• 51m ago</span>
             </div>
             {isModal && (
               <button
@@ -212,7 +292,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
             <div className="flex items-center gap-1 bg-[#161617] rounded-full">
               <button
                 onClick={() => handleVote("up")}
-                className={`p-1.5 rounded-l-full hover:bg-[#ff4500]/20 transition-colors ${
+                className={`p-1.5 rounded-l-full hover:bg-[#49D470]/20 transition-colors ${
                   voted === "up"
                     ? "text-[#49D470]"
                     : "text-[#818384] hover:text-[#49D470]"
@@ -277,14 +357,11 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           </div>
         </div>
 
-        {/* <h2 className="text-xl font-semibold text-white mb-6">Comments</h2> */}
-        {/* Add Comment Form */}
-
         {comments.length > 0 ? (
           <div className="space-y-6">
             {comments.map((comment) => {
               const userVote = commentVotes[comment.id];
-              const voteCount =
+              const commentVoteCount =
                 userVote === "up"
                   ? comment.voteCount + 1
                   : userVote === "down"
@@ -299,7 +376,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                   <div className="flex flex-col items-center py-2 px-2 bg-[#161617] rounded-l-md border-r border-[#343536]">
                     <button
                       onClick={() => handleCommentVote(comment.id, "up")}
-                      className={`p-1 rounded hover:bg-[#ff4500]/20 transition-colors ${
+                      className={`p-1 rounded hover:bg-[#49D470]/20 transition-colors ${
                         userVote === "up"
                           ? "text-[#49D470]"
                           : "text-[#818384] hover:text-[#49D470]"
@@ -314,7 +391,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                           ? "text-[#7193ff]"
                           : "text-[#d7dadc]"
                       }`}>
-                      {voteCount}
+                      {commentVoteCount}
                     </span>
                     <button
                       onClick={() => handleCommentVote(comment.id, "down")}
@@ -349,7 +426,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
             })}
           </div>
         ) : (
-          <div className="text-center py-6 text-[#818384]  rounded-md">
+          <div className="text-center py-6 text-[#818384] rounded-md">
             <p>No comments yet. Be the first to comment!</p>
           </div>
         )}
@@ -359,7 +436,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-50/10 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-purple-500/30 backdrop-blur-sm">
         <div className="absolute inset-0" onClick={handleClose} />
         <div className="min-h-full flex items-start justify-center py-16">
           <div className="relative bg-[#0A0A0A] rounded-2xl shadow-2xl">

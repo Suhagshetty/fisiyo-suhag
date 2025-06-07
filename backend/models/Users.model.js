@@ -11,7 +11,17 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/.+@.+\..+/, "Please enter a valid email"],
   },
- 
+  handle: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+  },
+  profilePicture: {
+    type: String,
+    default: null,
+  },
+
   interests: { type: [String], default: [] },
   gender: {
     type: String,
@@ -23,6 +33,12 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "professor", "moderator"],
     default: "user",
     required: true,
+  },
+  age: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 120,
   },
   posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post", default: [] }],
   comments: [
@@ -52,11 +68,11 @@ const userSchema = new mongoose.Schema({
   followingUsers: [
     { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
   ],
- 
+
   reputation: { type: Number, default: 0 },
   badges: { type: [String], default: [] },
   level: { type: Number, default: 1 },
-  xp: { type: Number, default: 0 }, 
+  xp: { type: Number, default: 0 },
   loginStreak: { type: Number, default: 0 },
   lastLoginDate: { type: Date },
   dailyActivity: {

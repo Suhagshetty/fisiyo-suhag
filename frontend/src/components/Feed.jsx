@@ -32,9 +32,13 @@ const Feed = () => {
   const [expandedPosts, setExpandedPosts] = useState(new Set());
   const [votedPosts, setVotedPosts] = useState(new Map());
   const location = useLocation();
+  const [upvoteCounts, setUpvoteCounts] = useState(new Map());
+  const [downvoteCounts, setDownvoteCounts] = useState(new Map());
   const navigate = useNavigate();
 
   const [currentUser, setCurrentUser] = useState(location.state?.user || null);
+  console.log(currentUser);
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,18 +55,148 @@ const Feed = () => {
     setExpandedPosts(newExpandedPosts);
   };
 
-  const handleVote = (postId, voteType) => {
-    const newVotedPosts = new Map(votedPosts);
-    const currentVote = newVotedPosts.get(postId);
+  // Load user's existing votes when component mounts
+  useEffect(() => {
+    const loadUserVotes = async () => {
+      if (currentUser?._id || user?.sub) {
+        try {
+          const userId = currentUser?._id || user?.sub;
+          const response = await fetch(
+            `http://localhost:3000/api/posts/votes/${userId}`
+          );
+          if (response.ok) {
+            const userVotes = await response.json();
+            const votesMap = new Map();
+            Object.entries(userVotes).forEach(([postId, voteType]) => {
+              votesMap.set(postId, voteType);
+            });
+            setVotedPosts(votesMap);
+          }
+        } catch (error) {
+          console.error("Error loading user votes:", error);
+        }
+      }
+    };
 
-    if (currentVote === voteType) {
-      newVotedPosts.delete(postId);
-    } else {
-      newVotedPosts.set(postId, voteType);
+    if (posts.length > 0) {
+      loadUserVotes();
     }
+  }, [posts, currentUser, user]);
 
-    setVotedPosts(newVotedPosts);
-  };
+  // Initialize separate upvote and downvote counts when posts load
+  useEffect(() => {
+    if (posts.length > 0) {
+      const initialUpvoteCounts = new Map();
+      const initialDownvoteCounts = new Map();
+
+      posts.forEach((post) => {
+        initialUpvoteCounts.set(post._id, post.upvotes?.length || 0);
+        initialDownvoteCounts.set(post._id, post.downvotes?.length || 0);
+      });
+
+      setUpvoteCounts(initialUpvoteCounts);
+      setDownvoteCounts(initialDownvoteCounts);
+    }
+  }, [posts]);
+
+  // Updated handleVote function to manage separate counts 
+    const handleVote = async (postId, voteType) => {
+      try {
+        const currentVote = votedPosts.get(postId);
+        const currentUpvotes = upvoteCounts.get(postId) || 0;
+        const currentDownvotes = downvoteCounts.get(postId) || 0;
+    
+        let newUpvotes = currentUpvotes;
+        let newDownvotes = currentDownvotes;
+        let newVoteType = voteType;
+    
+        // Handle vote logic more carefully
+        if (currentVote === voteType) {
+          // User is removing their vote (clicking same button)
+          newVoteType = null;
+          if (voteType === "up") {
+            newUpvotes = Math.max(0, currentUpvotes - 1);
+          } else {
+            newDownvotes = Math.max(0, currentDownvotes - 1);
+          }
+        } else if (currentVote && currentVote !== voteType) {
+          // User is switching from one vote to another
+          if (currentVote === "up" && voteType === "down") {
+            // Switching from upvote to downvote
+            newUpvotes = Math.max(0, currentUpvotes - 1);
+            newDownvotes = currentDownvotes + 1;
+          } else if (currentVote === "down" && voteType === "up") {
+            // Switching from downvote to upvote
+            newDownvotes = Math.max(0, currentDownvotes - 1);
+            newUpvotes = currentUpvotes + 1;
+          }
+        } else {
+          // New vote (no previous vote)
+          if (voteType === "up") {
+            newUpvotes = currentUpvotes + 1;
+          } else {
+            newDownvotes = currentDownvotes + 1;
+          }
+        }
+    
+        // Store original values for rollback
+        const originalUpvotes = currentUpvotes;
+        const originalDownvotes = currentDownvotes;
+        const originalVote = currentVote;
+    
+        // Optimistic UI update
+        setUpvoteCounts((prev) => new Map(prev).set(postId, newUpvotes));
+        setDownvoteCounts((prev) => new Map(prev).set(postId, newDownvotes));
+    
+        const newVotedPosts = new Map(votedPosts);
+        if (newVoteType === null) {
+          newVotedPosts.delete(postId);
+        } else {
+          newVotedPosts.set(postId, newVoteType);
+        }
+        setVotedPosts(newVotedPosts);
+    
+        // Send request to backend
+        const response = await fetch(
+          `http://localhost:3000/api/posts/${postId}/vote`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              voteType: newVoteType,
+              userId: currentUser?._id || user?.sub,
+            }),
+          }
+        );
+    
+        if (!response.ok) {
+          // Revert optimistic update on failure
+          setUpvoteCounts((prev) => new Map(prev).set(postId, originalUpvotes));
+          setDownvoteCounts((prev) => new Map(prev).set(postId, originalDownvotes));
+          
+          const revertedVotedPosts = new Map(votedPosts);
+          if (originalVote === null) {
+            revertedVotedPosts.delete(postId);
+          } else {
+            revertedVotedPosts.set(postId, originalVote);
+          }
+          setVotedPosts(revertedVotedPosts);
+          
+          throw new Error("Failed to update vote");
+        }
+    
+        // Update with actual server response to ensure consistency
+        const updatedPost = await response.json();
+        setUpvoteCounts((prev) =>
+          new Map(prev).set(postId, updatedPost.upvotes?.length || 0)
+        );
+        setDownvoteCounts((prev) =>
+          new Map(prev).set(postId, updatedPost.downvotes?.length || 0)
+        );
+      } catch (error) {
+        console.error("Error voting:", error);
+      }
+    };
 
   const handleCreatePost = () => {
     navigate("/compose/post", {
@@ -96,6 +230,15 @@ const Feed = () => {
     return words.slice(0, wordLimit).join(" ") + "...";
   };
 
+  const formatVoteCount = (count) => {
+    if (count >= 1000000) {
+      return (count / 1000000).toFixed(1) + "M";
+    } else if (count >= 1000) {
+      return (count / 1000).toFixed(1) + "K";
+    }
+    return count.toString();
+  };
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -113,42 +256,6 @@ const Feed = () => {
 
     fetchPosts();
   }, []);
-
-  // Mock professor suggestions data
-  const professorSuggestions = [
-    {
-      id: 1,
-      name: "Dr. Sarah Johnson",
-      department: "Computer Science",
-      expertise: ["AI", "Machine Learning"],
-      rating: 4.8,
-      publications: 42,
-    },
-    {
-      id: 2,
-      name: "Prof. Michael Chen",
-      department: "Physics",
-      expertise: ["Quantum Computing", "Nanotechnology"],
-      rating: 4.6,
-      publications: 38,
-    },
-    {
-      id: 3,
-      name: "Dr. Elena Rodriguez",
-      department: "Bioengineering",
-      expertise: ["Biomaterials", "Tissue Engineering"],
-      rating: 4.9,
-      publications: 51,
-    },
-    {
-      id: 4,
-      name: "Prof. James Wilson",
-      department: "Mathematics",
-      expertise: ["Topology", "Algebraic Geometry"],
-      rating: 4.7,
-      publications: 47,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e1e1e1] flex">
@@ -182,7 +289,7 @@ const Feed = () => {
 
           <button
             onClick={handleCreatePost}
-            className="w-full bg-gradient-to-r from-[#49D470] to-[#3BB863] hover:from-[#3BB863] hover:to-[#49D470] text-white font-medium py-3 px-6 rounded-full transition-all duration-300 text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
+            className="w-full bg-[#AD49E1] text-white font-medium py-3 px-6 rounded-full transition-all duration-300 text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
             <Plus size={16} />
             <span>Create Post</span>
           </button>
@@ -191,7 +298,7 @@ const Feed = () => {
         {/* Navigation Menu */}
         <div className="flex-1 py-4">
           <div className="space-y-2 px-4">
-            <button className="flex items-center gap-4 text-white bg-gradient-to-r from-[#49D470]/20 to-transparent hover:from-[#49D470]/30 hover:to-transparent px-4 py-3 rounded-xl transition-all duration-300 w-full text-left font-medium text-sm">
+            <button className="flex items-center gap-4 text-white bg-gradient-to-r from-[#AD49E1]/20 to-transparent hover:from-[#AD49E1]/40 hover:to-transparent px-4 py-3 rounded-xl transition-all duration-300 w-full text-left font-medium text-sm">
               <Home size={20} />
               <span>Home</span>
             </button>
@@ -266,7 +373,7 @@ const Feed = () => {
                 <input
                   type="text"
                   placeholder="Search Fisiyo"
-                  className="w-full pl-12 pr-6 py-3 bg-[#1a1a1a] rounded-full focus:ring-2 focus:ring-[#49D470] focus:bg-[#222222] transition-all duration-300 text-sm text-white placeholder-[#818384] shadow-inner"
+                  className="w-full pl-12 pr-6 py-3 bg-[#1a1a1a] rounded-full focus:ring-2 focus:ring-[#AD49E1] focus:bg-[#222222] transition-all duration-300 text-sm text-white placeholder-[#818384] shadow-inner"
                 />
               </div>
             </div>
@@ -282,9 +389,12 @@ const Feed = () => {
                     navigate("/profile", { state: { user: currentUser } })
                   }>
                   <img
-                    src={user?.picture || "/default-avatar.png"}
+                    src={
+                      `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${currentUser?.profilePicture}` ||
+                      "/default-avatar.png"
+                    }
                     alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover ring-2 ring-[#49D470]/20"
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-[#AD49E1]/20"
                   />
                   <ChevronDown size={16} className="text-[#818384]" />
                 </div>
@@ -300,7 +410,7 @@ const Feed = () => {
           <div className="max-w-6xl mx-auto px-6 py-8">
             {loading && (
               <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#49D470] border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
               </div>
             )}
 
@@ -312,8 +422,8 @@ const Feed = () => {
 
             {!loading && posts.length === 0 && (
               <div className="text-center py-24">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#49D470]/20 to-[#3BB863]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Home className="w-10 h-10 text-[#49D470]" />
+                <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#3BB863]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Home className="w-10 h-10 text-[#AD49E1]" />
                 </div>
                 <h3 className="text-2xl font-semibold text-white mb-3">
                   No posts yet
@@ -324,7 +434,7 @@ const Feed = () => {
                 </p>
                 <button
                   onClick={handleCreatePost}
-                  className="bg-gradient-to-r from-[#49D470] to-[#3BB863] hover:from-[#3BB863] hover:to-[#49D470] text-white font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm inline-flex items-center gap-3 shadow-lg hover:shadow-xl">
+                  className="bg-gradient-to-r from-[#AD49E1] to-[#3BB863] hover:from-[#3BB863] hover:to-[#AD49E1] text-white font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm inline-flex items-center gap-3 shadow-lg hover:shadow-xl">
                   <Plus size={16} />
                   <span>Create First Post</span>
                 </button>
@@ -332,18 +442,17 @@ const Feed = () => {
             )}
 
             {!loading && posts.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2  gap-15">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-15">
                 {posts.map((post) => {
                   const isExpanded = expandedPosts.has(post._id);
                   const userVote = votedPosts.get(post._id);
-                  const upvoteCount =
-                    142 +
-                    (userVote === "up" ? 1 : userVote === "down" ? -1 : 0);
+                  const upvoteCount = upvoteCounts.get(post._id) || 0;
+                  const downvoteCount = downvoteCounts.get(post._id) || 0;
 
                   return (
                     <article
                       key={post._id}
-                      className="bg-gradient-to-br from-transparent to-gray-50/10 rounded-3xl overflow-hidden  transition-all duration-500 shadow-2xl hover:shadow-3xl"
+                      className="bg-gradient-to-br from-transparent to-gray-50/10 rounded-3xl overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl"
                       style={{ minHeight: "400px" }}>
                       {/* Post Image - First */}
                       {post.imageUrl?.length > 0 && (
@@ -383,12 +492,6 @@ const Feed = () => {
                         </div>
 
                         {/* Post Title */}
-                        {/* <h2
-                          className="text-xl font-bold text-white mb-4 leading-tight cursor-pointer hover:text-[#49D470] transition-colors duration-300"
-                          onClick={() => togglePostExpansion(post._id)}>
-                          {post.title || "Research Summary"}
-                        </h2> */}
-
                         <Link
                           to={`/post/${post._id}`}
                           state={{
@@ -396,7 +499,7 @@ const Feed = () => {
                             user: currentUser,
                             backgroundLocation: location,
                           }}
-                          className="text-base font-bold text-white mb-4 leading-tight cursor-pointer hover:text-[#49D470] transition-colors duration-300"
+                          className="text-base font-bold text-white mb-4 leading-tight cursor-pointer hover:text-[#AD49E1] transition-colors duration-300 block"
                           onClick={() => togglePostExpansion(post._id)}>
                           {post.title || "Research Summary"}
                         </Link>
@@ -431,7 +534,7 @@ const Feed = () => {
                             ).map((tag) => (
                               <span
                                 key={tag}
-                                className=" text-[#49D470] px-3 rounded-full  text-[11px] font-medium  cursor-pointer">
+                                className="text-[#AD49E1] px-3 rounded-full text-[11px] font-medium cursor-pointer">
                                 #{tag}
                               </span>
                             ))}
@@ -453,40 +556,39 @@ const Feed = () => {
                                 user: currentUser,
                                 backgroundLocation: location,
                               }}
-                              className="flex items-center gap-2 text-[#818384] hover:text-[#49D470] hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm font-medium">
+                              className="flex items-center gap-2 text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm font-medium">
                               <MessageSquare size={16} />
                               <span>{post.comments.length}</span>
                             </Link>
 
-                            {/* Vote buttons moved here */}
-                            <div className="flex items-center gap-2">
+                            {/* YouTube-style Vote buttons with separate counts */}
+                            <div className="flex items-center bg-[#272b30] rounded-full">
                               <button
                                 onClick={() => handleVote(post._id, "up")}
-                                className={`p-2 rounded-full transition-all duration-300 ${
+                                className={`flex items-center gap-2 px-3 py-2 rounded-l-full transition-all duration-300 ${
                                   userVote === "up"
-                                    ? "text-[#49D470] bg-[#49D470]/20"
-                                    : "text-[#818384] hover:text-[#49D470] hover:bg-[#1a1a1a]"
+                                    ? "text-[#AD49E1] bg-[#AD49E1]/20"
+                                    : "text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a]"
                                 }`}>
                                 <ArrowUp size={16} />
+                                <span className="text-sm font-medium">
+                                  {formatVoteCount(upvoteCount)}
+                                </span>
                               </button>
-                              <span
-                                className={`text-sm font-bold px-2 ${
-                                  userVote === "up"
-                                    ? "text-[#49D470]"
-                                    : userVote === "down"
-                                    ? "text-[#7193ff]"
-                                    : "text-[#d7dadc]"
-                                }`}>
-                                {upvoteCount}
-                              </span>
+
+                              <div className="w-px h-8 bg-[#3a3a3a]"></div>
+
                               <button
                                 onClick={() => handleVote(post._id, "down")}
-                                className={`p-2 rounded-full transition-all duration-300 ${
+                                className={`flex items-center gap-2 px-3 py-2 rounded-r-full transition-all duration-300 ${
                                   userVote === "down"
                                     ? "text-[#7193ff] bg-[#7193ff]/20"
                                     : "text-[#818384] hover:text-[#7193ff] hover:bg-[#1a1a1a]"
                                 }`}>
                                 <ArrowDown size={16} />
+                                <span className="text-sm font-medium">
+                                  {formatVoteCount(downvoteCount)}
+                                </span>
                               </button>
                             </div>
                           </div>

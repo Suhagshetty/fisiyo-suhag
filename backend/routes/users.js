@@ -11,6 +11,10 @@ router.post("/", async (req, res) => {
       email: req.body.email,
       role: req.body.role,
       interests: req.body.interests,
+      handle: req.body.handle,
+      gender: req.body.gender,
+      age: req.body.age,  
+      profilePicture: req.body.profilePicture || null, // Add profile picture field
     };
 
     const newUser = new User(userData);
@@ -21,6 +25,8 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+
  
 router.get("/:id", async (req, res) => {
   try {

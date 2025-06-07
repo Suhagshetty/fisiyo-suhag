@@ -127,7 +127,7 @@ const Explore = () => {
             <input
               type="text"
               placeholder="Search papers, discussions, or researchers..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#49D470] focus:border-[#49D470]"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#AD49E1] focus:border-[#AD49E1]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -171,7 +171,7 @@ const Explore = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 font-medium text-sm flex items-center space-x-2 border-b-2 ${
                   activeTab === tab.id
-                    ? "border-[#49D470] text-[#49D470]"
+                    ? "border-[#AD49E1] text-[#AD49E1]"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}>
                 {tab.icon}
@@ -192,10 +192,10 @@ const Explore = () => {
               <section className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-medium flex items-center space-x-2">
-                    <TrendingUp className="w-5 h-5 text-[#49D470]" />
+                    <TrendingUp className="w-5 h-5 text-[#AD49E1]" />
                     <span>Trending in Your Network</span>
                   </h2>
-                  <button className="text-sm text-[#49D470] hover:text-[#3bb45d]">
+                  <button className="text-sm text-[#AD49E1] hover:text-[#3bb45d]">
                     See all
                   </button>
                 </div>
@@ -226,10 +226,10 @@ const Explore = () => {
               <section className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-medium flex items-center space-x-2">
-                    <Clock className="w-5 h-5 text-[#49D470]" />
+                    <Clock className="w-5 h-5 text-[#AD49E1]" />
                     <span>Recent Discussions</span>
                   </h2>
-                  <button className="text-sm text-[#49D470] hover:text-[#3bb45d]">
+                  <button className="text-sm text-[#AD49E1] hover:text-[#3bb45d]">
                     See all
                   </button>
                 </div>
@@ -237,7 +237,7 @@ const Explore = () => {
                   {popularDiscussions.map((discussion, index) => (
                     <div
                       key={index}
-                      className="p-4 border border-gray-100 rounded-lg hover:border-[#49D470]/30 transition-colors cursor-pointer">
+                      className="p-4 border border-gray-100 rounded-lg hover:border-[#AD49E1]/30 transition-colors cursor-pointer">
                       <h3 className="font-medium mb-2">{discussion.title}</h3>
                       <div className="flex flex-wrap gap-2 mb-3">
                         {discussion.tags.map((tag, i) => (
@@ -337,7 +337,7 @@ const Explore = () => {
                       </p>
                       <div className="flex items-center text-sm text-gray-500 space-x-4">
                         <span>{collab.members} members</span>
-                        <button className="text-sm px-3 py-1 rounded-full bg-[#49D470] text-white hover:bg-[#3bb45d]">
+                        <button className="text-sm px-3 py-1 rounded-full bg-[#AD49E1] text-white hover:bg-[#3bb45d]">
                           Join
                         </button>
                       </div>
@@ -460,25 +460,25 @@ const Explore = () => {
             <div className="space-y-3">
               <a
                 href="#"
-                className="flex items-center space-x-2 text-gray-700 hover:text-[#49D470]">
+                className="flex items-center space-x-2 text-gray-700 hover:text-[#AD49E1]">
                 <Hash className="w-4 h-4" />
                 <span>Research Methodology Guidelines</span>
               </a>
               <a
                 href="#"
-                className="flex items-center space-x-2 text-gray-700 hover:text-[#49D470]">
+                className="flex items-center space-x-2 text-gray-700 hover:text-[#AD49E1]">
                 <Hash className="w-4 h-4" />
                 <span>Open Access Resources</span>
               </a>
               <a
                 href="#"
-                className="flex items-center space-x-2 text-gray-700 hover:text-[#49D470]">
+                className="flex items-center space-x-2 text-gray-700 hover:text-[#AD49E1]">
                 <Hash className="w-4 h-4" />
                 <span>Collaboration Best Practices</span>
               </a>
               <a
                 href="#"
-                className="flex items-center space-x-2 text-gray-700 hover:text-[#49D470]">
+                className="flex items-center space-x-2 text-gray-700 hover:text-[#AD49E1]">
                 <Hash className="w-4 h-4" />
                 <span>Funding Opportunities</span>
               </a>

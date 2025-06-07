@@ -35,7 +35,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#49D470]/5 via-white to-[#49D470]/5"> 
+    <div className="min-h-screen bg-gradient-to-b from-[#AD49E1]/5 via-white to-[#AD49E1]/5"> 
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
           className="absolute w-96 h-96 bg-gradient-to-r from-[#F0F0F0]/20 to-[#2EB171]/30 rounded-full blur-3xl"
@@ -100,11 +100,11 @@ const LandingPage = () => {
               className="text-5xl sm:text-6xl lg:text-[100px] font-light text-[#12261D]  mb-12 leading-[0.95] tracking-tight"
               style={{ fontFamily: "Playfair Display, serif" }}>
               Where{"  "}
-              <span className="text-[#49D470] text-[60px] lg:text-[135px] font-extrabold">
+              <span className="text-[#AD49E1] text-[60px] lg:text-[135px] font-extrabold">
                 Innovation
               </span>{" "}
               Meets{" "}
-              <span className="text-[#49D470] text-[60px] lg:text-[135px] font-extrabold">
+              <span className="text-[#AD49E1] text-[60px] lg:text-[135px] font-extrabold">
                 Expertise
               </span>
             </h1>
@@ -123,7 +123,7 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-24">
             <div
-              className="inline-block text-[#49D470] text-sm font-light tracking-widest uppercase mb-8"
+              className="inline-block text-[#AD49E1] text-sm font-light tracking-widest uppercase mb-8"
               style={{ fontFamily: "Manrope, sans-serif" }}>
               Scientific Excellence Platform
             </div>
@@ -141,14 +141,14 @@ const LandingPage = () => {
                 title: "Hypothesis Validation",
                 description:
                   "Rigorously test theories with peer-reviewed methodology frameworks",
-                color: "[#49D470]",
+                color: "[#AD49E1]",
               },
               {
                 icon: Shield,
                 title: "Secure IP Management",
                 description:
                   "Blockchain-verified intellectual property protection system",
-                color: "[#49D470]",
+                color: "[#AD49E1]",
               },
               {
                 icon: Users,
@@ -162,7 +162,7 @@ const LandingPage = () => {
                 title: "Knowledge Exchange",
                 description:
                   "Weekly masterclasses with field pioneers and industry partners",
-                color: "[#49D470]",
+                color: "[#AD49E1]",
               },
             ].map((feature, index) => (
               <div key={index} className="group text-center">
@@ -170,14 +170,14 @@ const LandingPage = () => {
                   className={`w-16 h-16 rounded-full flex items-center justify-center mb-8 mx-auto transition-colors duration-500`}
                   style={{
                     backgroundColor: `${
-                      feature.color === "[#49D470]" ? "#49D470" : "#49D470"
+                      feature.color === "[#AD49E1]" ? "#AD49E1" : "#AD49E1"
                     }10`,
                   }}>
                   <feature.icon
                     className="w-7 h-7"
                     style={{
                       color:
-                        feature.color === "[#49D470]" ? "#49D470" : "#49D470",
+                        feature.color === "[#AD49E1]" ? "#AD49E1" : "#AD49E1",
                     }}
                     strokeWidth={1}
                   />
@@ -198,11 +198,11 @@ const LandingPage = () => {
         </div>
       </section>
       {/* User Roles */}
-      <section className="py-32 bg-gradient-to-b from-[#49D470]/5 to-[#49D470]/5">
+      <section className="py-32 bg-gradient-to-b from-[#AD49E1]/5 to-[#AD49E1]/5">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-24">
             <div
-              className="inline-block text-[#49D470] text-sm font-light tracking-widest uppercase mb-8"
+              className="inline-block text-[#AD49E1] text-sm font-light tracking-widest uppercase mb-8"
               style={{ fontFamily: "Manrope, sans-serif" }}>
               Global Research Ecosystem
             </div>
@@ -252,10 +252,10 @@ const LandingPage = () => {
               <div key={index} className="text-center group">
                 <div
                   className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 transition-colors duration-500"
-                  style={{ backgroundColor: "#49D47020" }}>
+                  style={{ backgroundColor: "#AD49E120" }}>
                   <role.icon
                     className="w-9 h-9"
-                    style={{ color: "#49D470" }}
+                    style={{ color: "#AD49E1" }}
                     strokeWidth={1}
                   />
                 </div>
@@ -285,7 +285,7 @@ const LandingPage = () => {
         </div>
       </section>
       {/* CTA */}
-      <section className="py-32 bg-gradient-to-b from-[#49D470]/8 to-[#49D470]/8">
+      <section className="py-32 bg-gradient-to-b from-[#AD49E1]/8 to-[#AD49E1]/8">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-16 border border-yellow-200/30">
             <h2
