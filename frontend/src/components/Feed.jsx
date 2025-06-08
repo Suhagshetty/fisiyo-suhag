@@ -35,7 +35,7 @@ const Feed = () => {
   const [upvoteCounts, setUpvoteCounts] = useState(new Map());
   const [downvoteCounts, setDownvoteCounts] = useState(new Map());
   const navigate = useNavigate();
-
+  const [communities, setCommunities] = useState([]);
   const [currentUser, setCurrentUser] = useState(location.state?.user || null);
   console.log(currentUser);
 
@@ -54,6 +54,22 @@ const Feed = () => {
     }
     setExpandedPosts(newExpandedPosts);
   };
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/communities");
+        const data = await response.json();
+        setCommunities(data);
+        console.log(data);
+        
+      } catch (err) {
+        console.error("Error fetching communities:", err);
+      }
+    };
+
+    fetchCommunities();
+  }, []);
 
   // Load user's existing votes when component mounts
   useEffect(() => {
@@ -274,7 +290,7 @@ const Feed = () => {
         }}>
         {/* Sidebar Header */}
         <div className="p-6">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-1">
             <h1
               className="text-2xl font-bold text-white flex items-center gap-2"
               style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -282,24 +298,22 @@ const Feed = () => {
             </h1>
             <button
               onClick={toggleSidebar}
-              className="text-[#818384] hover:text-white lg:hidden">
+              className="text-white hover:text-white lg:hidden">
               <X size={20} />
             </button>
           </div>
 
-          <button
+          {/* <button
             onClick={handleCreatePost}
             className="w-full bg-[#AD49E1] text-white font-medium py-3 px-6 rounded-full transition-all duration-300 text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
             <Plus size={16} />
             <span>Create Post</span>
-          </button>
+          </button> */}
         </div>
 
         {/* Navigation Menu */}
-        <div className="flex-1 py-4">
-          <div className="space-y-2 px-4">
-          
-
+        <div className="flex-1 ">
+          <div className="space-y-2 px-2">
             <button
               onClick={() =>
                 navigate("/explore", { state: { user: currentUser } })
@@ -328,9 +342,44 @@ const Feed = () => {
           </div>
         </div>
 
+        {/* Communities Section */}
+        <div className="mt-auto px-6 py-4">
+          <h3 className="text-xs uppercase tracking-wider text-[#818384] mb-3 px-2">
+            Popular Communities
+          </h3>
+          <div className="space-y-1.5">
+            {communities.map((community) => (
+              <Link
+                key={community._id}
+                to={`/community/${community.name}`}
+                state={{ user: currentUser }}
+                className="flex items-center gap-2 text-[#d7dadc] hover:text-white hover:bg-[#1a1a1a] py-1 rounded-xl transition-all duration-300">
+                {community.avatarUrl ? (
+                  <img
+                    src={community.avatarUrl}
+                    alt={community.name}
+                    className="w-12 h-12 object-cover"
+                  />
+                ) : (" "
+                  // <div className="bg-[#272b30] p-1.5 rounded-full">
+                  //   <Users size={16} className="text-[#AD49E1]" />
+                  // </div>
+                )}
+                <div>
+                  <div className="font-bold text-sm">c/{community.name}</div>
+                  <div className="text-xs text-[#818384]">
+                    {community.memberCount} members
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* User Section */}
         {/* User Section */}
         {isAuthenticated && (
-          <div className="p-6">
+          <div className="px-6 pb-6">
             <button
               onClick={() => logout({ returnTo: window.location.origin })}
               className="flex items-center gap-4 text-[#d7dadc] hover:text-red-400 hover:bg-[#1a1a1a] w-full px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm">
@@ -470,17 +519,27 @@ const Feed = () => {
                       <div className="p-3">
                         {/* Post Header */}
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[13px] font-semibold text-white bg-[#272b30] px-3 py-1 rounded-full">
-                              r/{post.community || "AcademicResearch"}
-                            </span>
-                            <span className="text-sm text-[#a0a2a4]">
-                              e/
-                              {(post.userHandle || "anonymous")
-                                .toLowerCase()
-                                .replace(/\s+/g, "")}{" "}
-                              · {formatDate(post.createdAt)} ago
-                            </span>
+                          <div className="flex items-center gap-2 mb-1">
+                            <img
+                              className="w-12 h-12  object-cover object-center"
+                              src={post.community_dp}
+                              alt="community"
+                            />
+                            <div>
+                              <h2 className="text-white font-medium">
+                                c/{post.communityHandle || "Astronomy"}
+                              </h2>
+                              <p className="text-[#818384] text-sm flex items-center">
+                                <span>
+                                  e/
+                                  {(post.userHandle || "anonymous")
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "")}
+                                </span>
+                                <span className="mx-1.5">•</span>{" "}
+                                {formatDate(post.createdAt)} ago
+                              </p>
+                            </div>
                           </div>
 
                           <button className="text-[#a0a2a4] hover:text-white p-2 rounded-full hover:bg-[#1f1f1f] transition-colors duration-200">

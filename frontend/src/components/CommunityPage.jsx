@@ -37,7 +37,8 @@ const CommunityPage = () => {
   const [votedPosts, setVotedPosts] = useState(new Map());
   const [upvoteCounts, setUpvoteCounts] = useState(new Map());
   const [downvoteCounts, setDownvoteCounts] = useState(new Map());
-  const [currentUser, setCurrentUser] = useState(location.state?.user || null);
+  const [currentUser, setCurrentUser] = useState(location.state?.user || null); 
+  
 
   const [community, setCommunity] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -230,6 +231,7 @@ const CommunityPage = () => {
       state: {
         backgroundLocation: location,
         user: currentUser,
+        community: { name: community.name, url: community.avatarUrl, id: community._id },
       },
     });
   };
@@ -243,6 +245,8 @@ const CommunityPage = () => {
           `http://localhost:3000/api/communities/name/${name}`
         );
         setCommunity(response.data);
+        console.log(response.data);
+        
 
         // Fetch posts for this community
         // const postsResponse = await axios.get(
@@ -270,7 +274,7 @@ const CommunityPage = () => {
       posts.forEach((post) => {
         initialUpvoteCounts.set(post._id, post.upvotes?.length || 0);
         initialDownvoteCounts.set(post._id, post.downvotes?.length || 0);
-      });
+      });60
 
       setUpvoteCounts(initialUpvoteCounts);
       setDownvoteCounts(initialDownvoteCounts);
@@ -280,7 +284,7 @@ const CommunityPage = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center" >
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#AD49E1] mx-auto mb-4"></div>
           <h2 className="text-xl font-medium text-white">
@@ -317,7 +321,7 @@ const CommunityPage = () => {
               Community Not Found
             </h2>
             <p className="text-[#818384] mt-2">
-              The community <span className="font-mono">r/{name}</span> could
+              The community <span className="font-mono">c/{name}</span> could
               not be located in our scientific archives.
             </p>
             <button
@@ -363,9 +367,7 @@ const CommunityPage = () => {
                   <div className="container mx-auto px-4 pb-6">
                     <div className="flex items-end gap-6">
                       {/* Avatar */}
-                      <div
-                        className="w-60 h-50 rounded-full"
-                       >
+                      <div className="w-60 h-50 rounded-full">
                         {community.avatarUrl ? (
                           <img
                             src={community.avatarUrl}
@@ -383,21 +385,34 @@ const CommunityPage = () => {
                       <div className="text-white">
                         <h1
                           className="text-4xl font-bold"
-                          style={{ 
+                          style={{
                             color: community.colorSecondary || "#ffffff", // fallback if colorSecondary is not set
                           }}>
                           {community.title}
                         </h1>
 
-                        <p className="text-xl opacity-90 mt-1">
-                          r/{community.name}
+                        <p
+                          className="text-xl opacity-90 mt-1"
+                          style={{
+                            color: community.colorSecondary || "#ffffff", // fallback if colorSecondary is not set
+                          }}>
+                          {" "}
+                          c/{community.name}
                         </p>
-                        <p className="mt-3 text-[#d7dadc] max-w-2xl">
+                        <p
+                          className="mt-3 text-[#d7dadc] max-w-2xl"
+                          style={{
+                            color: community.colorSecondary || "#ffffff", // fallback if colorSecondary is not set
+                          }}>
                           {community.description}
                         </p>
 
                         <div className="flex items-center gap-6 mt-4">
-                          <div className="flex items-center text-[#d7dadc]">
+                          <div
+                            className="flex items-center text-[#d7dadc]"
+                            style={{
+                              color: community.colorSecondary || "#ffffff", // fallback if colorSecondary is not set
+                            }}>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               className="h-5 w-5 mr-2 "
@@ -414,7 +429,11 @@ const CommunityPage = () => {
                             </span>
                           </div>
 
-                          <div className="flex items-center text-[#d7dadc]">
+                          <div
+                            className="flex items-center text-[#d7dadc]"
+                            style={{
+                              color: community.colorSecondary || "#ffffff", // fallback if colorSecondary is not set
+                            }}>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               className="h-5 w-5 mr-2"
@@ -426,7 +445,11 @@ const CommunityPage = () => {
                                 clipRule="evenodd"
                               />
                             </svg>
-                            <span className="font-medium">
+                            <span
+                              className="font-medium"
+                              style={{
+                                color: community.colorSecondary || "#ffffff", // fallback if colorSecondary is not set
+                              }}>
                               {community.postCount.toLocaleString()} research
                               posts
                             </span>
@@ -479,11 +502,7 @@ const CommunityPage = () => {
                         ignite discovery.
                       </p>
                       <button
-                        onClick={() =>
-                          document
-                            .querySelector("form")
-                            ?.scrollIntoView({ behavior: "smooth" })
-                        }
+                        onClick={() => createNewPost()}
                         className="bg-gradient-to-r from-[#AD49E1] to-[#AD49E1] hover:from-[#AD49E1] hover:to-[#AD49E1] text-white font-medium py-2 px-6 rounded-full transition-all duration-300">
                         Share Your Research
                       </button>
@@ -516,7 +535,7 @@ const CommunityPage = () => {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-[13px] font-semibold text-white bg-[#272b30] px-3 py-1 rounded-full">
-                                  r/{post.community || "AcademicResearch"}
+                                  c/{post.community || "AcademicResearch"}
                                 </span>
                                 <span className="text-sm text-[#a0a2a4]">
                                   e/

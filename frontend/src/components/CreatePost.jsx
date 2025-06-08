@@ -19,6 +19,13 @@ const CreatePost = ({
  
   const currentUser = location.state?.user;
   console.log(currentUser);
+  const community = location.state?.community.name;
+  const community_dp = location.state?.community.url;
+  const community_id = location.state?.community.id;
+  console.log(community);
+  console.log(community_dp);
+  console.log(community_id);
+
   
 
   const [postContent, setPostContent] = useState("");
@@ -104,8 +111,10 @@ const CreatePost = ({
         tags: tags.slice(0, MAX_TAGS),
         imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
         author: currentUser._id,
-        userHandle: currentUser.handle
-        
+        userHandle: currentUser.handle,
+        community: community_id,
+        communityHandle: community,
+        community_dp: community_dp,
       };
 
       console.log("Final post data:", postData);
@@ -249,16 +258,25 @@ const CreatePost = ({
             ? "p-4 border-b border-gray-200"
             : "p-6 border-b border-gray-200"
         } flex justify-between items-center sticky top-0 bg-white z-10`}>
-        <div className="flex items-center">
-          {!isModal && (
-            <button
-              onClick={handleClose}
-              className="mr-4 text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full">
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          <h2 className="text-xl font-medium text-gray-900">Create Post</h2>
+        <div className="flex items-center gap-2 mb-1">
+          {/* Community Image */}
+          <img
+            className="w-12 h-12 rounded-full object-cover object-center "
+            src={community_dp}
+            alt="community"
+          />
+
+          {/* Name + Members stacked */}
+          <div className="flex flex-col">
+            <h2 className="text-Black font-medium text-sm sm:text-base">
+              c/{community}
+            </h2>
+            <p className="text-[#818384] text-xs sm:text-sm">
+              {  "0"} members
+            </p>
+          </div>
         </div>
+
         <button
           onClick={handleClose}
           className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-1 rounded-full">

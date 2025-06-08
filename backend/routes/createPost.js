@@ -6,7 +6,17 @@ const router = express.Router();
 
 router.post("/create-post", async (req, res) => {
   try {
-    const { title, description, tags, imageUrl, author, userHandle } = req.body;
+    const {
+      title,
+      description,
+      tags,
+      imageUrl,
+      author,
+      userHandle,
+      community,
+      communityHandle,
+      community_dp,
+    } = req.body;
 
     const newPost = new Post({
       title,
@@ -15,6 +25,9 @@ router.post("/create-post", async (req, res) => {
       imageUrl: imageUrl ? [imageUrl] : [], // Convert to array
       author,
       userHandle,
+      community,
+      communityHandle,
+      community_dp,
     });
 
     const savedPost = await newPost.save();

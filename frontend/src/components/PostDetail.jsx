@@ -61,6 +61,22 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     fetchData();
   }, [post, postId]);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "now";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "now";
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return date.toLocaleDateString();
+  };
+  
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -242,12 +258,12 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
               <div className="flex items-center gap-3 mb-4">
                 <img
                   className="w-12 h-12  object-cover object-center"
-                  src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/10145465.png"
+                  src={post.community_dp}
                   alt="community"
                 />
                 <div>
                   <h2 className="text-white font-medium">
-                    c/{post.community || "Astronomy"}
+                    c/{post.communityHandle || "Astronomy"}
                   </h2>
                   <p className="text-[#818384] text-sm flex items-center">
                     <span>
@@ -256,8 +272,8 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                         .toLowerCase()
                         .replace(/\s+/g, "")}
                     </span>
-                    <span className="mx-1.5">•</span>
-                    <span>51m ago</span>
+                    <span className="mx-1.5">·</span>
+                    {formatDate(post.createdAt)} ago
                   </p>
                 </div>
               </div>

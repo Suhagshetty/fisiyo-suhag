@@ -35,5 +35,18 @@ router.get("/name/:name", async (req, res) => {
   }
 });
 
+// Add this to your community routes file
+router.get("/", async (req, res) => {
+  try {
+    const communities = await Community.find()
+      .select("name description memberCount avatarUrl")
+      .sort({ memberCount: -1 })
+      .limit(10);
+    res.json(communities);
+  } catch (error) {
+    console.error("Error fetching communities:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 export default router;

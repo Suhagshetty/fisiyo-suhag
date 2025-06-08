@@ -36,14 +36,27 @@ const postSchema = new mongoose.Schema(
       ref: "User",
     },
     userHandle: { type: String, required: true, trim: true, maxlength: 100 },
+    communityHandle: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
     community: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Community",
     },
-    comments: [{ 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Comment" 
-    }],
+    community_dp: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
     upvotes: [
       {
         type: mongoose.Schema.Types.ObjectId,
