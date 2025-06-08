@@ -104,7 +104,7 @@ const CreatePost = ({
         tags: tags.slice(0, MAX_TAGS),
         imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
         author: currentUser._id,
-        userHandle: currentUser.name
+        userHandle: currentUser.handle
         
       };
 

@@ -9,6 +9,7 @@ import CreatePost from "./components/CreatePost";
 import CommunityCreator from "./components/communitySetup";
 import PostDetail from "./components/PostDetail";
 import Explore from "./components/Explore";
+import CommunityPage from "./components/CommunityPage";
 
 function App() {
   const location = useLocation();
@@ -28,6 +29,7 @@ function App() {
         <Route path="/post-login-check" element={<PostLoginCheck />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/community-setup" element={<CommunityCreator />} />
+        <Route path="/community/:name" element={<CommunityPage />} />
 
         {/* Full-screen routes when accessed directly (not as modals) */}
         <Route path="/post/:postId" element={<PostDetail />} />

@@ -108,7 +108,7 @@ const Profile = () => {
             <p className="text-gray-600">
               {currentUser.role.charAt(0).toUpperCase() +
                 currentUser.role.slice(1)}{" "}
-              | {currentUser.email}
+              | {currentUser.handle}
             </p>
           </div>
 

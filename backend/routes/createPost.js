@@ -1,5 +1,6 @@
 import express from "express";
 import Post from "../models/Posts.model.js";
+import Comment from "../models/Comment.model.js";
 
 const router = express.Router();
 
@@ -117,6 +118,59 @@ router.get("/posts/votes/:userId", async (req, res) => {
   } catch (err) {
     console.error("Fetch votes error:", err);
     res.status(500).json({ error: "Failed to fetch user votes" });
+  }
+});
+// Add this to the POST comment route after saving the comment
+router.post('/posts/:postId/comments', async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { body, author, handle } = req.body;
+
+    // Create new comment
+    const newComment = new Comment({
+      body,
+      author,
+      handle,
+      post: postId
+    });
+
+    const savedComment = await newComment.save();
+    
+    // Push comment ID to the post's comments array
+    await Post.findByIdAndUpdate(
+      postId, 
+      { $push: { comments: savedComment._id } },
+      { new: true }
+    );
+    
+    res.status(201).json(savedComment);
+  } catch (err) {
+    console.error("Create comment error:", err);
+    res.status(500).json({ error: err.message || "Comment creation failed" });
+  }
+});
+
+// Update GET comments route to populate author info
+router.get('/posts/:postId/comments', async (req, res) => {
+  try {
+    const { postId } = req.params;
+    
+    const comments = await Comment.find({ post: postId })
+      .populate('author', 'username handle') // Add this line
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Map to desired structure
+    const formattedComments = comments.map(comment => ({
+      ...comment,
+      handle: comment.author?.handle || comment.handle,
+      author: comment.author?._id
+    }));
+
+    res.status(200).json(formattedComments);
+  } catch (err) {
+    console.error("Fetch comments error:", err);
+    res.status(500).json({ error: "Failed to fetch comments" });
   }
 });
 

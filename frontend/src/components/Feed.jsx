@@ -298,10 +298,7 @@ const Feed = () => {
         {/* Navigation Menu */}
         <div className="flex-1 py-4">
           <div className="space-y-2 px-4">
-            <button className="flex items-center gap-4 text-white bg-gradient-to-r from-[#AD49E1]/20 to-transparent hover:from-[#AD49E1]/40 hover:to-transparent px-4 py-3 rounded-xl transition-all duration-300 w-full text-left font-medium text-sm">
-              <Home size={20} />
-              <span>Home</span>
-            </button>
+          
 
             <button
               onClick={() =>
@@ -394,7 +391,7 @@ const Feed = () => {
                       "/default-avatar.png"
                     }
                     alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover ring-2 ring-[#AD49E1]/20"
+                    className="w-9 h-9 rounded-full object-cover"
                   />
                   <ChevronDown size={16} className="text-[#818384]" />
                 </div>
@@ -407,7 +404,7 @@ const Feed = () => {
         <main
           className="flex-1 overflow-y-auto bg-[#0a0a0a]"
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-          <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="max-w-6xl mx-auto px-0">
             {loading && (
               <div className="flex justify-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
@@ -422,7 +419,7 @@ const Feed = () => {
 
             {!loading && posts.length === 0 && (
               <div className="text-center py-24">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#3BB863]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Home className="w-10 h-10 text-[#AD49E1]" />
                 </div>
                 <h3 className="text-2xl font-semibold text-white mb-3">
@@ -434,7 +431,7 @@ const Feed = () => {
                 </p>
                 <button
                   onClick={handleCreatePost}
-                  className="bg-gradient-to-r from-[#AD49E1] to-[#3BB863] hover:from-[#3BB863] hover:to-[#AD49E1] text-white font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm inline-flex items-center gap-3 shadow-lg hover:shadow-xl">
+                  className="bg-gradient-to-r from-[#AD49E1] to-[#AD49E1] hover:from-[#AD49E1] hover:to-[#AD49E1] text-white font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm inline-flex items-center gap-3 shadow-lg hover:shadow-xl">
                   <Plus size={16} />
                   <span>Create First Post</span>
                 </button>
@@ -442,7 +439,7 @@ const Feed = () => {
             )}
 
             {!loading && posts.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-15">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 ">
                 {posts.map((post) => {
                   const isExpanded = expandedPosts.has(post._id);
                   const userVote = votedPosts.get(post._id);

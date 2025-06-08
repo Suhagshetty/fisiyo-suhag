@@ -2,43 +2,37 @@ import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema(
   {
-    body: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 500, // or whatever limit you prefer
-    },
+    body: String,
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
-    userHandle: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 100,
-    },
+    handle: String,
     post: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
-      required: true,
     },
-    community: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Community",
-      required: true,
-    },
-    // You can add nested replies here if desired,
-    // but you’d typically store replies as separate documents too.
+    upvotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    downvotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
-  {
-    timestamps: true, // adds createdAt & updatedAt
-  }
+  { timestamps: true }
 );
 
-// Index so you can quickly find all comments for a given post (sorted by time):
+// Index for quick lookups
 commentSchema.index({ post: 1, createdAt: -1 });
 
+// Use "Comment" (singular) - Mongoose will make it "comments" (plural, lowercase)
 const Comment = mongoose.model("Comment", commentSchema);
+
+
 export default Comment;

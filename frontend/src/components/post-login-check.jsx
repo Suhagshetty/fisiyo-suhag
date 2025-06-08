@@ -71,7 +71,7 @@ const PostLoginCheck = () => {
   }, [isAuthenticated, isLoading, animationCompleted, user, navigate]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-black text-white">
+    <div className="flex items-center justify-center h-screen bg-black text-[#AD49E1]">
       <div className="text-5xl font-extrabold tracking-widest">
         {displayText}
         <span

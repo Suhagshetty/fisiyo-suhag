@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRoutes from "./routes/users.js";
 import postRoutes from "./routes/createPost.js"
+import commintyRoutes from "./routes/communities.js"
+
 import multer from "multer";
 import { createClient } from "@supabase/supabase-js";
 import cors from "cors";
@@ -22,6 +24,7 @@ app.use(
 );
 app.use("/api/users", userRoutes);
 app.use("/api", postRoutes);
+app.use("/api/communities", commintyRoutes);
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 

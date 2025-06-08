@@ -40,12 +40,10 @@ const postSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Community",
     },
-    comments: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
-      },
-    ],
+    comments: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Comment" 
+    }],
     upvotes: [
       {
         type: mongoose.Schema.Types.ObjectId,
