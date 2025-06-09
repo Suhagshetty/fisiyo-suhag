@@ -452,220 +452,231 @@ const Feed = () => {
         <main
           className="flex-1 overflow-y-auto bg-[#0a0a0a]"
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-          <div className="max-w-6xl mx-auto px-0">
-            {loading && (
-              <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-2xl p-6 text-red-400 text-center mb-8 backdrop-blur-sm">
-                {error}
-              </div>
-            )}
-
-            {!loading && posts.length === 0 && (
-              <div className="text-center py-24">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Home className="w-10 h-10 text-[#AD49E1]" />
+          {/* Centered Container for Posts */}
+          <div className="flex justify-around">
+            <div className="w-full max-w-2xl">
+              {loading && (
+                <div className="flex justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-3">
-                  No posts yet
-                </h3>
-                <p className="text-[#818384] max-w-md mx-auto mb-8 text-lg">
-                  Be the first to share your research or academic insights with
-                  the community
-                </p>
-                <button
-                  onClick={handleCreatePost}
-                  className="bg-gradient-to-r from-[#AD49E1] to-[#AD49E1] hover:from-[#AD49E1] hover:to-[#AD49E1] text-white font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm inline-flex items-center gap-3 shadow-lg hover:shadow-xl">
-                  <Plus size={16} />
-                  <span>Create First Post</span>
-                </button>
-              </div>
-            )}
+              )}
 
-            {!loading && posts.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 ">
-                {posts.map((post) => {
-                  const isExpanded = expandedPosts.has(post._id);
-                  const userVote = votedPosts.get(post._id);
-                  const upvoteCount = upvoteCounts.get(post._id) || 0;
-                  const downvoteCount = downvoteCounts.get(post._id) || 0;
+              {error && (
+                <div className="bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-2xl p-6 text-red-400 text-center mb-8 backdrop-blur-sm mx-4">
+                  {error}
+                </div>
+              )}
 
-                  return (
-                    <article
-                      key={post._id}
-                      className="bg-[#010101] rounded-3xl overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl"
-                      // className="bg-gradient-to-br from-transparent to-gray-50/10 rounded-3xl overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl"
-                      style={{ minHeight: "400px" }}>
-                      {/* Post Image - First */}
-                      {post.imageUrl?.length > 0 && (
-                        <div className="relative overflow-hidden">
-                          <img
-                            src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
-                            alt="Post content"
-                            className="w-full h-64 object-cover cursor-pointer transition-transform duration-500 hover:scale-105"
-                            onClick={() =>
-                              !isExpanded && togglePostExpansion(post._id)
-                            }
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                        </div>
-                      )}
+              {!loading && posts.length === 0 && (
+                <div className="text-center py-24 px-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Home className="w-10 h-10 text-[#AD49E1]" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mb-3">
+                    No posts yet
+                  </h3>
+                  <p className="text-[#818384] max-w-md mx-auto mb-8 text-lg">
+                    Be the first to share your research or academic insights
+                    with the community
+                  </p>
+                  <button
+                    onClick={handleCreatePost}
+                    className="bg-gradient-to-r from-[#AD49E1] to-[#AD49E1] hover:from-[#AD49E1] hover:to-[#AD49E1] text-white font-medium py-3 px-8 rounded-full transition-all duration-300 text-sm inline-flex items-center gap-3 shadow-lg hover:shadow-xl">
+                    <Plus size={16} />
+                    <span>Create First Post</span>
+                  </button>
+                </div>
+              )}
 
-                      {/* Post Content */}
-                      <div className="p-3">
-                        {/* Post Header */}
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Link
-                              key={post.communityHandle}
-                              to={`/community/${post.communityHandle}`}
-                              state={{ user: currentUser }}>
-                              <img
-                                className="w-12 h-12  object-cover object-center"
-                                src={post.community_dp}
-                                alt="community"
-                              />
-                            </Link>
+              {!loading && posts.length > 0 && (
+                <div className="space-y-0">
+                  {posts.map((post) => {
+                    const isExpanded = expandedPosts.has(post._id);
+                    const userVote = votedPosts.get(post._id);
+                    const upvoteCount = upvoteCounts.get(post._id) || 0;
+                    const downvoteCount = downvoteCounts.get(post._id) || 0;
 
-                            <div>
+                    return (
+                      <article
+                        key={post._id}
+                        className="bg-[#010101] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl border-b border-[#1a1a1a]"
+                        style={{ minHeight: "400px" }}>
+                        {/* Post Image - First */}
+
+                        {/* Post Content */}
+                        <div className="pt-3 px-6 py-2">
+                          {/* Post Header */}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-3 mb-1">
                               <Link
                                 key={post.communityHandle}
                                 to={`/community/${post.communityHandle}`}
                                 state={{ user: currentUser }}>
-                                <h2 className="text-white font-medium  text-[14px] ">
-                                  c/{post.communityHandle || "Astronomy"}
-                                </h2>
+                                <img
+                                  className="w-12 h-12 object-cover object-center"
+                                  src={post.community_dp}
+                                  alt="community"
+                                />
                               </Link>
 
-                              <p className="text-[#818384] text-[12px]  flex items-center">
-                                <span>
-                                  e/
-                                  {(post.userHandle || "anonymous")
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "")}
-                                </span>
-                                <span className="mx-1.5">•</span>{" "}
-                                {formatDate(post.createdAt)} ago
-                              </p>
+                              <div>
+                                <Link
+                                  key={post.communityHandle}
+                                  to={`/community/${post.communityHandle}`}
+                                  state={{ user: currentUser }}>
+                                  <h2 className="text-white font-medium text-[14px]">
+                                    c/{post.communityHandle || "Astronomy"}
+                                  </h2>
+                                </Link>
+
+                                <p className="text-[#818384] text-[12px] flex items-center">
+                                  <span>
+                                    e/
+                                    {(post.userHandle || "anonymous")
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "")}
+                                  </span>
+                                  <span className="mx-1.5">•</span>{" "}
+                                  {formatDate(post.createdAt)} ago
+                                </p>
+                              </div>
                             </div>
+
+                            <button className="text-[#a0a2a4] hover:text-white p-2 rounded-full hover:bg-[#1f1f1f] transition-colors duration-200">
+                              <MoreHorizontal size={18} />
+                            </button>
                           </div>
+                          {/* Post Title */}
+                          <Link
+                            to={`/post/${post._id}`}
+                            state={{
+                              post,
+                              user: currentUser,
+                              backgroundLocation: location,
+                            }}
+                            className="text-[18px] font-bold text-white mb-4 leading-tight cursor-pointer hover:text-[#AD49E1] transition-colors duration-300 block"
+                            onClick={() => togglePostExpansion(post._id)}>
+                            {post.title || "Research Summary"}
+                          </Link>
+                          {post.imageUrl?.length > 0 && (
+                            <div className="relative mb-4 bg-[#0b0b0b] overflow-hidden">
+                              <img
+                                src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
+                                alt="Post content"
+                                className={`mx-auto cursor-pointer transition-transform duration-500 hover:scale-105 ${
+                                  isExpanded
+                                    ? "w-full max-h-[600px]"
+                                    : "w-[70%] max-h-[400px]"
+                                } object-contain `}
+                                onClick={() =>
+                                  !isExpanded && togglePostExpansion(post._id)
+                                }
+                              />
 
-                          <button className="text-[#a0a2a4] hover:text-white p-2 rounded-full hover:bg-[#1f1f1f] transition-colors duration-200">
-                            <MoreHorizontal size={18} />
-                          </button>
-                        </div>
-
-                        {/* Post Title */}
-                        <Link
-                          to={`/post/${post._id}`}
-                          state={{
-                            post,
-                            user: currentUser,
-                            backgroundLocation: location,
-                          }}
-                          className="text-base font-bold text-white mb-4 leading-tight cursor-pointer hover:text-[#AD49E1] transition-colors duration-300 block"
-                          onClick={() => togglePostExpansion(post._id)}>
-                          {post.title || "Research Summary"}
-                        </Link>
-
-                        {/* Post Content */}
-                        <div className="mb-2 text-[#d7dadc] leading-relaxed">
-                          {isExpanded ? (
-                            <p className="text-[12.5px]">{post.description}</p>
-                          ) : (
-                            <p className="text-[12.5px]">
-                              {truncateText(post.description)}{" "}
-                              {post.description &&
-                                post.description.split(" ").length > 20 && (
-                                  <button
-                                    onClick={() =>
-                                      togglePostExpansion(post._id)
-                                    }
-                                    className="text-[#d7dadc] hover:text-[#d7dadc] cursor-pointer transition-colors duration-300 font-medium">
-                                    Read more
-                                  </button>
-                                )}
-                            </p>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            </div>
                           )}
-                        </div>
 
-                        {/* Action Bar */}
-                        <div className="flex items-center justify-between pt-2">
-                          <div className="flex items-center gap-4">
-                            <Link
-                              to={`/post/${post._id}`}
-                              state={{
-                                post,
-                                user: currentUser,
-                                backgroundLocation: location,
-                              }}
-                              className="flex items-center gap-2 text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm font-medium">
-                              <MessageSquare size={16} />
-                              <span>{post.comments.length}</span>
-                            </Link>
-
-                            {/* YouTube-style Vote buttons with separate counts */}
-                            <div className="flex items-center">
-                              <button
-                                onClick={() => handleVote(post._id, "up")}
-                                className={`flex items-center gap-1 px-2 py-1 transition-all duration-200
-      ${
-        userVote === "up" ? "text-red-600" : "text-[#818384] hover:text-red-500"
-      }`}>
-                                <ChevronUp size={16} />
-                                <span className="text-xs font-medium">
-                                  {formatVoteCount(upvoteCount)}
-                                </span>
-                              </button>
-
-                              <button
-                                onClick={() => handleVote(post._id, "down")}
-                                className={`flex items-center gap-1 px-2 py-1 transition-all duration-200
-      ${
-        userVote === "down"
-          ? "text-[#7193ff]"
-          : "text-[#818384] hover:text-[#7193ff]"
-      }`}>
-                                <ChevronDown size={16} />
-                                <span className="text-xs font-medium">
-                                  {formatVoteCount(downvoteCount)}
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                              <Share size={16} />
-                              <span className="hidden sm:inline">Share</span>
-                            </button>
-                            <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                              <Bookmark size={16} />
-                              <span className="hidden sm:inline">Save</span>
-                            </button>
-
-                            {isExpanded && (
-                              <button
-                                onClick={() => togglePostExpansion(post._id)}
-                                className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                                <ChevronUp size={16} />
-                                <span className="hidden sm:inline">
-                                  Collapse
-                                </span>
-                              </button>
+                          {/* Post Content */}
+                          <div className="mb-0 text-[#d7dadc] leading-relaxed">
+                            {isExpanded ? (
+                              <p className="text-[14px]">{post.description}</p>
+                            ) : (
+                              <p className="text-[14px]">
+                                {truncateText(post.description)}{" "}
+                                {post.description &&
+                                  post.description.split(" ").length > 20 && (
+                                    <button
+                                      onClick={() =>
+                                        togglePostExpansion(post._id)
+                                      }
+                                      className="text-[#d7dadc] hover:text-[#d7dadc] cursor-pointer transition-colors duration-300 font-medium">
+                                      Read more
+                                    </button>
+                                  )}
+                              </p>
                             )}
                           </div>
+
+                          {/* Action Bar */}
+                          <div className="flex items-center justify-between pt-2">
+                            <div className="flex items-center gap-6">
+                              <Link
+                                to={`/post/${post._id}`}
+                                state={{
+                                  post,
+                                  user: currentUser,
+                                  backgroundLocation: location,
+                                }}
+                                className="flex items-center gap-2 text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm font-medium">
+                                <MessageSquare size={16} />
+                                <span>{post.comments.length}</span>
+                              </Link>
+
+                              {/* YouTube-style Vote buttons with separate counts */}
+                              <div className="flex items-center">
+                                <button
+                                  onClick={() => handleVote(post._id, "up")}
+                                  className={`flex items-center gap-1 px-3 py-2 transition-all duration-200
+        ${
+          userVote === "up"
+            ? "text-red-600"
+            : "text-[#818384] hover:text-red-500"
+        }`}>
+                                  <ChevronUp size={16} />
+                                  <span className="text-sm font-medium">
+                                    {formatVoteCount(upvoteCount)}
+                                  </span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleVote(post._id, "down")}
+                                  className={`flex items-center gap-1 px-3 py-2 transition-all duration-200
+        ${
+          userVote === "down"
+            ? "text-[#7193ff]"
+            : "text-[#818384] hover:text-[#7193ff]"
+        }`}>
+                                  <ChevronDown size={16} />
+                                  <span className="text-sm font-medium">
+                                    {formatVoteCount(downvoteCount)}
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
+                                <Share size={16} />
+                                <span className="hidden sm:inline">Share</span>
+                              </button>
+                              <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
+                                <Bookmark size={16} />
+                                <span className="hidden sm:inline">Save</span>
+                              </button>
+
+                              {isExpanded && (
+                                <button
+                                  onClick={() => togglePostExpansion(post._id)}
+                                  className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
+                                  <ChevronUp size={16} />
+                                  <span className="hidden sm:inline">
+                                    Collapse
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="sm:w-[30%] w-0 rounded-3xl  bg-gray-900
+            ">hhhhhhhhhhh</div>
           </div>
         </main>
       </div>

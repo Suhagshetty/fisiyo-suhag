@@ -449,30 +449,30 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
 
   return (
     <div
-      className={`${
-        isModal
-          ? "fixed inset-0 z-50 overflow-y-auto"
-          : "min-h-screen bg-[#030303]"
-      }`}>
+    className={`${
+      isModal
+      ? "fixed inset-0 z-50 overflow-y-auto"
+      : "min-h-screen bg-[#030303]"
+    }`}>
       {isModal && (
         <div
+        onClick={handleClose}
           className="fixed inset-0 bg-[#AD49E1]/20 backdrop-blur-xs transition-opacity"
-          onClick={handleClose}
         />
       )}
 
       <div
         className={`relative ${
-          isModal ? "flex items-center justify-center min-h-screen pt-20" : ""
+          isModal ? "flex items-center justify-center min-h-screen sm:pt-20 pt-0" : ""
         }`}>
         <div
-          className={`bg-[#0A0A0A] rounded-2xl overflow-hidden border border-[#1E1E1E] shadow-2xl ${
+          className={`bg-[#0A0A0A] sm:rounded-2xl overflow-hidden border border-[#1E1E1E] shadow-2xl ${
             isModal ? "w-full max-w-3xl" : "max-w-3xl mx-auto my-8"
           }`}>
           {/* Header */}
-          <div className="p-6 border-b border-[#1E1E1E] flex justify-between items-start">
+          <div className="p-6   flex justify-between items-start">
             <div>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-0">
                 <img
                   className="w-12 h-12  object-cover object-center"
                   src={post.community_dp}
@@ -509,13 +509,13 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="px-6">
             <div className="mb-6 text-[#d7dadc] text-lg leading-relaxed">
               <p className="whitespace-pre-line">{post.description}</p>
             </div>
 
             {post.imageUrl?.length > 0 && (
-              <div className="mb-8 overflow-hidden rounded-xl border border-[#1E1E1E] bg-black">
+              <div className="mb-8 overflow-hidden rounded-xl  bg-black">
                 <img
                   src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
                   alt="Post content"
@@ -628,8 +628,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           <div className="border-t p-3 border-[#1E1E1E]">
             {comments.length > 0 ? (
               <div className="divide-y divide-[#1E1E1E]">
-                  {comments.map((comment) => renderComment(comment))}
-
+                {comments.map((comment) => renderComment(comment))}
               </div>
             ) : (
               <div className="py-12 text-center">

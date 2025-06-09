@@ -261,18 +261,18 @@ const CreatePost = ({
         <div className="flex items-center gap-2 mb-1">
           {/* Community Image */}
           <img
-            className="w-12 h-12 rounded-full object-cover object-center "
-            src={community_dp}
+            className="w-12 h-12   object-cover object-center"
+            src={community_dp || "/placeholder.jpg"} // optional fallback
             alt="community"
           />
 
           {/* Name + Members stacked */}
           <div className="flex flex-col">
-            <h2 className="text-Black font-medium text-sm sm:text-base">
-              c/{community}
+            <h2 className="text-black font-medium text-sm sm:text-base">
+              c/{community?.handle || community || "unknown"}
             </h2>
             <p className="text-[#818384] text-xs sm:text-sm">
-              {  "0"} members
+              {community?.membersCount || 0} members
             </p>
           </div>
         </div>

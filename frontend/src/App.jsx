@@ -10,6 +10,8 @@ import CommunityCreator from "./components/communitySetup";
 import PostDetail from "./components/PostDetail";
 import Explore from "./components/Explore";
 import CommunityPage from "./components/CommunityPage";
+import CreatePoll from "./components/CreatePoll";
+import CreateDiscussion from "./components/CreateDiscussion";
 
 function App() {
   const location = useLocation();
@@ -31,9 +33,9 @@ function App() {
         <Route path="/community-setup" element={<CommunityCreator />} />
         <Route path="/community/:name" element={<CommunityPage />} />
 
-        {/* Full-screen routes when accessed directly (not as modals) */}
         <Route path="/post/:postId" element={<PostDetail />} />
         <Route path="/compose/post" element={<CreatePost isModal={false} />} />
+        {/* <Route path="/compose/poll" element={<CreatePoll isModal={false} />} /> */}
       </Routes>
 
       {/* Modal routes - only render when modal state is present */}
@@ -43,6 +45,24 @@ function App() {
             path="/compose/post"
             element={
               <CreatePost
+                isModal={true}
+                backgroundLocation={backgroundLocation}
+              />
+            }
+          />
+          <Route
+            path="/compose/discussion"
+            element={
+              <CreateDiscussion
+                isModal={true}
+                backgroundLocation={backgroundLocation}
+              />
+            }
+          />
+          <Route
+            path="/compose/poll"
+            element={
+              <CreatePoll
                 isModal={true}
                 backgroundLocation={backgroundLocation}
               />
