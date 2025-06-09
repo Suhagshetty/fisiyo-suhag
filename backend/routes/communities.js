@@ -22,7 +22,8 @@ router.get("/name/:name", async (req, res) => {
     const community = await Community.findOne({ name: communityName })
       .populate("createdBy", "username profilePicture")
       .populate("moderators", "username")
-      .populate("members", "username");
+      .populate("members", "username")
+      // .populate("posts")
 
     if (!community) {
       return res.status(404).json({ message: "Community not found" });

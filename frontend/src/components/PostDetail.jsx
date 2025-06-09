@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   MessageSquare,
@@ -18,12 +18,16 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const { postId } = useParams();
   const [post, setPost] = useState(state?.post || null);
   const [user, setUser] = useState(state?.user || null);
+  console.log(user);
+
   const [loading, setLoading] = useState(!post);
   const [voted, setVoted] = useState(null);
   const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState([]);
   const [voteCount, setVoteCount] = useState(0);
   const [isCommenting, setIsCommenting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyContent, setReplyContent] = useState("");
   const [commentVotes, setCommentVotes] = useState({});
 
   // Fetch post and comments
@@ -49,6 +53,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           const commentsData = await commentsRes.json();
 
           setComments(commentsData);
+
           setVoteCount(postData.upvotes - postData.downvotes);
         } catch (err) {
           console.error("Error fetching data:", err);
@@ -76,7 +81,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     if (diffDays < 7) return `${diffDays}d`;
     return date.toLocaleDateString();
   };
-  
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -93,6 +98,217 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     if (postId) fetchComments();
   }, [postId]);
 
+  // Update the reply submission handler
+  const handleReplySubmit = async (parentCommentId) => {
+    if (!replyContent.trim() || !user || !post) return;
+
+    try {
+      const replyData = {
+        body: replyContent,
+        author: user._id || user?.sub,
+        handle: user?.handle || user?.userHandle || "Anonymous",
+        userDp: user.profilePicture, 
+      };
+
+      const response = await fetch(
+        `http://localhost:3000/api/comments/${parentCommentId}/reply`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(replyData),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to post reply");
+
+      // Refetch comments to update UI
+      await fetchComments();
+      setReplyContent("");
+      setReplyingTo(null);
+    } catch (err) {
+      console.error("Error posting reply:", err);
+    }
+  };
+
+  // Create a dedicated fetchComments function
+  const fetchComments = useCallback(async () => {
+    if (!postId) return;
+    try {
+      const commentsRes = await fetch(
+        `http://localhost:3000/api/posts/${postId}/comments`
+      );
+      if (!commentsRes.ok) throw new Error("Failed to fetch comments");
+      const commentsData = await commentsRes.json();
+      setComments(commentsData);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    }
+  }, [postId]);
+
+  // Use useEffect to fetch comments
+  useEffect(() => {
+    if (postId) {
+      fetchComments();
+    }
+  }, [postId, fetchComments]);
+
+  
+
+  const renderComment = (comment, depth = 0) => {
+    const isReplying = replyingTo === comment._id;
+
+    return (
+      <div
+        key={comment._id}
+        className={`pl-2 mt-3 ${
+          depth > 0 ? "  border-l border-[#1E1E1E]" : " "
+        } transition-colors duration-200`}>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-0.5">
+              <img
+                className="w-8 h-8 rounded-full"
+                src={
+                  `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${comment.userDp}` ||
+                  "/default-avatar.png"
+                }
+                alt="avatar"
+              />
+              <div>
+                <span className="text-sm font-medium text-white">
+                 c/{comment.handle || "Anonymous"}
+                </span>
+                <span className="text-xs text-[#818384] ml-2">
+                  {new Date(comment.createdAt).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    // year: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {/* Inside <div className="flex-1">, after the comment body */}
+
+            <p className="text-[#d7dadc] pl-11 mb-0.5 mr-2">{comment.body}</p>
+
+            <div className="pl-11">
+              <div className="pl-0 flex items-center gap-4 mt-0 text-sm text-[#818384]">
+                <button
+                  onClick={() =>
+                    setReplyingTo((prev) =>
+                      prev === comment._id ? null : comment._id
+                    )
+                  }
+                  className="hover:text-[#AD49E1] font-medium">
+                  {isReplying ? "Cancel" : "Reply"}
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCommentVote(comment._id, "up")}
+                    className={`p-1.5 rounded-full transition-colors ${
+                      commentVotes[comment._id] === "up"
+                        ? "text-[#AD49E1] bg-[#AD49E1]/10"
+                        : "hover:bg-[#AD49E1]/10 hover:text-[#AD49E1]"
+                    }`}>
+                    <ChevronUp size={18} />
+                  </button>
+                  <span className="text-xs font-bold text-[#d7dadc]">
+                    {comment.voteCount || 0}
+                  </span>
+                  <button
+                    onClick={() => handleCommentVote(comment._id, "down")}
+                    className={`p-1.5 rounded-full transition-colors ${
+                      commentVotes[comment._id] === "down"
+                        ? "text-[#7193ff] bg-[#7193ff]/10"
+                        : "hover:bg-[#7193ff]/10 hover:text-[#7193ff]"
+                    }`}>
+                    <ChevronDown size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {isReplying && (
+                <div className="mt-3">
+                  <textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    className="w-full bg-[#0A0A0A] border border-[#1E1E1E] rounded-xl p-3 text-white placeholder-[#818384] focus:outline-none focus:border-[#AD49E1]/50 transition-colors"
+                    placeholder="Write a reply..."
+                    rows={3}
+                  />
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={() => handleReplySubmit(comment._id)}
+                      disabled={!replyContent.trim()}
+                      className={`flex items-center gap-2 font-medium py-1.5 px-5 rounded-full text-sm transition-all ${
+                        !replyContent.trim()
+                          ? "bg-[#AD49E1]/50 cursor-not-allowed"
+                          : "bg-[#AD49E1] hover:bg-[#AD49E1]/90"
+                      }`}>
+                      <Send size={14} />
+                      Reply
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recursively render nested replies */}
+            {comment.replies?.map((reply) => renderComment(reply, depth + 1))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+
+  // Update the comment rendering to handle nested replies
+  {
+    comments.map((comment) => (
+      <div key={comment._id}>
+        {/* Main comment rendering... */}
+
+        {/* Render replies */}
+        {comment.replies?.map((reply) => (
+          <div key={reply._id} className="ml-10 pl-4 border-l border-[#1E1E1E]">
+            {/* Reply rendering... */}
+          </div>
+        ))}
+
+        {/* Reply form */}
+        {replyingTo === comment._id && (
+          <div className="ml-10 mt-4">
+            <textarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              className="w-full bg-[#0A0A0A] border border-[#1E1E1E] rounded-xl p-3 text-white placeholder-[#818384] focus:outline-none focus:border-[#AD49E1]/50 transition-colors"
+              placeholder="Write a reply..."
+              rows={3}
+            />
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={() => handleReplySubmit(comment._id)}
+                disabled={!replyContent.trim()}
+                className={`flex items-center gap-2 font-medium py-1.5 px-5 rounded-full text-sm transition-all ${
+                  !replyContent.trim()
+                    ? "bg-[#AD49E1]/50 cursor-not-allowed"
+                    : "bg-[#AD49E1] hover:bg-[#AD49E1]/90"
+                }`}>
+                <Send size={14} />
+                Reply
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    ));
+  }
+
   // Submit comment handler
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !user || !post) return;
@@ -103,6 +319,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
         body: newComment,
         author: user?._id || user?.sub,
         handle: user?.handle || user?.userHandle || "Anonymous",
+        userDp: user.profilePicture,
       };
 
       const response = await fetch(
@@ -371,11 +588,11 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           </div>
 
           {/* Comment Input */}
-          <div className="p-6 border-t border-[#1E1E1E]">
-            <h3 className="text-xl font-semibold text-white mb-4">
+          <div className="p-4 border-t border-[#1E1E1E]">
+            <h3 className="text-xl font-semibold text-white mb-2">
               Add a comment
             </h3>
-            <div className="relative mb-2">
+            <div className="relative mb-1">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
@@ -386,7 +603,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                 <button
                   onClick={handleSubmitComment}
                   disabled={isCommenting || !newComment.trim()}
-                  className={`flex items-center gap-2 font-medium py-2 px-6 rounded-full transition-all ${
+                  className={`flex items-center gap-2 font-medium cursor-pointer py-2 px-6 rounded-full transition-all ${
                     isCommenting || !newComment.trim()
                       ? "bg-[#AD49E1]/50 cursor-not-allowed"
                       : "bg-[#AD49E1] hover:bg-[#AD49E1]/90"
@@ -408,64 +625,11 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           </div>
 
           {/* Comments Section */}
-          <div className="border-t border-[#1E1E1E]">
+          <div className="border-t p-3 border-[#1E1E1E]">
             {comments.length > 0 ? (
               <div className="divide-y divide-[#1E1E1E]">
-                {comments.map((comment) => (
-                  <div
-                    key={comment._id}
-                    className="p-6 hover:bg-[#0F0F0F] transition-colors duration-200">
-                    <div className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <button
-                          onClick={() => handleCommentVote(comment._id, "up")}
-                          className={`p-1.5 rounded-full transition-colors ${
-                            commentVotes[comment._id] === "up"
-                              ? "text-[#AD49E1] bg-[#AD49E1]/10"
-                              : "hover:bg-[#AD49E1]/10 hover:text-[#AD49E1]"
-                          }`}>
-                          <ChevronUp size={18} />
-                        </button>
-                        <span className="text-xs font-bold my-1 text-[#d7dadc]">
-                          {comment.voteCount || 0}
-                        </span>
-                        <button
-                          onClick={() => handleCommentVote(comment._id, "down")}
-                          className={`p-1.5 rounded-full transition-colors ${
-                            commentVotes[comment._id] === "down"
-                              ? "text-[#7193ff] bg-[#7193ff]/10"
-                              : "hover:bg-[#7193ff]/10 hover:text-[#7193ff]"
-                          }`}>
-                          <ChevronDown size={18} />
-                        </button>
-                      </div>
+                  {comments.map((comment) => renderComment(comment))}
 
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-[#343536] flex items-center justify-center">
-                            <User size={16} className="text-[#818384]" />
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-white">
-                              {comment.handle || "Anonymous"}
-                            </span>
-                            <span className="text-xs text-[#818384] ml-2">
-                              {new Date(comment.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                }
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-[#d7dadc] pl-11">{comment.body}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             ) : (
               <div className="py-12 text-center">

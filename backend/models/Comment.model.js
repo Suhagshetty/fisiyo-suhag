@@ -1,38 +1,64 @@
-import mongoose from "mongoose";
+  import mongoose from "mongoose";
 
-const commentSchema = new mongoose.Schema(
-  {
-    body: String,
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    handle: String,
-    post: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    },
-    upvotes: [
-      {
+  const commentSchema = new mongoose.Schema(
+    {
+      body: String,
+
+      author: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        required: true,
       },
-    ],
-    downvotes: [
-      {
+
+      userDp: {
+        type: String, // Typically a URL to the user's profile picture
+        required: true,
+      },
+
+      handle: {
+        type: String,
+        required: true,
+      },
+
+      post: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Post",
+        required: true,
       },
-    ],
-  },
-  { timestamps: true }
-);
 
-// Index for quick lookups
-commentSchema.index({ post: 1, createdAt: -1 });
+      upvotes: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
 
-// Use "Comment" (singular) - Mongoose will make it "comments" (plural, lowercase)
-const Comment = mongoose.model("Comment", commentSchema);
+      downvotes: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
 
+      replies: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Comment", // Self-reference for nested replies
+        },
+      ],
 
-export default Comment;
+      parentComment: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+        default: null,
+      },
+    },
+    { timestamps: true }
+  );
+
+  // Index for performance: fetch comments of a post, ordered by creation time
+  commentSchema.index({ post: 1, createdAt: -1 });
+
+  const Comment = mongoose.model("Comment", commentSchema);
+
+  export default Comment;

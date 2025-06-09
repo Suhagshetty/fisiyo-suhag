@@ -37,7 +37,7 @@ const Feed = () => {
   const navigate = useNavigate();
   const [communities, setCommunities] = useState([]);
   const [currentUser, setCurrentUser] = useState(location.state?.user || null);
-  console.log(currentUser);
+  // console.log(currentUser);
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +61,7 @@ const Feed = () => {
         const response = await fetch("http://localhost:3000/api/communities");
         const data = await response.json();
         setCommunities(data);
-        console.log(data);
-        
+        // console.log(data);
       } catch (err) {
         console.error("Error fetching communities:", err);
       }
@@ -115,104 +114,106 @@ const Feed = () => {
     }
   }, [posts]);
 
-  // Updated handleVote function to manage separate counts 
-    const handleVote = async (postId, voteType) => {
-      try {
-        const currentVote = votedPosts.get(postId);
-        const currentUpvotes = upvoteCounts.get(postId) || 0;
-        const currentDownvotes = downvoteCounts.get(postId) || 0;
-    
-        let newUpvotes = currentUpvotes;
-        let newDownvotes = currentDownvotes;
-        let newVoteType = voteType;
-    
-        // Handle vote logic more carefully
-        if (currentVote === voteType) {
-          // User is removing their vote (clicking same button)
-          newVoteType = null;
-          if (voteType === "up") {
-            newUpvotes = Math.max(0, currentUpvotes - 1);
-          } else {
-            newDownvotes = Math.max(0, currentDownvotes - 1);
-          }
-        } else if (currentVote && currentVote !== voteType) {
-          // User is switching from one vote to another
-          if (currentVote === "up" && voteType === "down") {
-            // Switching from upvote to downvote
-            newUpvotes = Math.max(0, currentUpvotes - 1);
-            newDownvotes = currentDownvotes + 1;
-          } else if (currentVote === "down" && voteType === "up") {
-            // Switching from downvote to upvote
-            newDownvotes = Math.max(0, currentDownvotes - 1);
-            newUpvotes = currentUpvotes + 1;
-          }
+  // Updated handleVote function to manage separate counts
+  const handleVote = async (postId, voteType) => {
+    try {
+      const currentVote = votedPosts.get(postId);
+      const currentUpvotes = upvoteCounts.get(postId) || 0;
+      const currentDownvotes = downvoteCounts.get(postId) || 0;
+
+      let newUpvotes = currentUpvotes;
+      let newDownvotes = currentDownvotes;
+      let newVoteType = voteType;
+
+      // Handle vote logic more carefully
+      if (currentVote === voteType) {
+        // User is removing their vote (clicking same button)
+        newVoteType = null;
+        if (voteType === "up") {
+          newUpvotes = Math.max(0, currentUpvotes - 1);
         } else {
-          // New vote (no previous vote)
-          if (voteType === "up") {
-            newUpvotes = currentUpvotes + 1;
-          } else {
-            newDownvotes = currentDownvotes + 1;
-          }
+          newDownvotes = Math.max(0, currentDownvotes - 1);
         }
-    
-        // Store original values for rollback
-        const originalUpvotes = currentUpvotes;
-        const originalDownvotes = currentDownvotes;
-        const originalVote = currentVote;
-    
-        // Optimistic UI update
-        setUpvoteCounts((prev) => new Map(prev).set(postId, newUpvotes));
-        setDownvoteCounts((prev) => new Map(prev).set(postId, newDownvotes));
-    
-        const newVotedPosts = new Map(votedPosts);
-        if (newVoteType === null) {
-          newVotedPosts.delete(postId);
+      } else if (currentVote && currentVote !== voteType) {
+        // User is switching from one vote to another
+        if (currentVote === "up" && voteType === "down") {
+          // Switching from upvote to downvote
+          newUpvotes = Math.max(0, currentUpvotes - 1);
+          newDownvotes = currentDownvotes + 1;
+        } else if (currentVote === "down" && voteType === "up") {
+          // Switching from downvote to upvote
+          newDownvotes = Math.max(0, currentDownvotes - 1);
+          newUpvotes = currentUpvotes + 1;
+        }
+      } else {
+        // New vote (no previous vote)
+        if (voteType === "up") {
+          newUpvotes = currentUpvotes + 1;
         } else {
-          newVotedPosts.set(postId, newVoteType);
+          newDownvotes = currentDownvotes + 1;
         }
-        setVotedPosts(newVotedPosts);
-    
-        // Send request to backend
-        const response = await fetch(
-          `http://localhost:3000/api/posts/${postId}/vote`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              voteType: newVoteType,
-              userId: currentUser?._id || user?.sub,
-            }),
-          }
-        );
-    
-        if (!response.ok) {
-          // Revert optimistic update on failure
-          setUpvoteCounts((prev) => new Map(prev).set(postId, originalUpvotes));
-          setDownvoteCounts((prev) => new Map(prev).set(postId, originalDownvotes));
-          
-          const revertedVotedPosts = new Map(votedPosts);
-          if (originalVote === null) {
-            revertedVotedPosts.delete(postId);
-          } else {
-            revertedVotedPosts.set(postId, originalVote);
-          }
-          setVotedPosts(revertedVotedPosts);
-          
-          throw new Error("Failed to update vote");
-        }
-    
-        // Update with actual server response to ensure consistency
-        const updatedPost = await response.json();
-        setUpvoteCounts((prev) =>
-          new Map(prev).set(postId, updatedPost.upvotes?.length || 0)
-        );
-        setDownvoteCounts((prev) =>
-          new Map(prev).set(postId, updatedPost.downvotes?.length || 0)
-        );
-      } catch (error) {
-        console.error("Error voting:", error);
       }
-    };
+
+      // Store original values for rollback
+      const originalUpvotes = currentUpvotes;
+      const originalDownvotes = currentDownvotes;
+      const originalVote = currentVote;
+
+      // Optimistic UI update
+      setUpvoteCounts((prev) => new Map(prev).set(postId, newUpvotes));
+      setDownvoteCounts((prev) => new Map(prev).set(postId, newDownvotes));
+
+      const newVotedPosts = new Map(votedPosts);
+      if (newVoteType === null) {
+        newVotedPosts.delete(postId);
+      } else {
+        newVotedPosts.set(postId, newVoteType);
+      }
+      setVotedPosts(newVotedPosts);
+
+      // Send request to backend
+      const response = await fetch(
+        `http://localhost:3000/api/posts/${postId}/vote`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            voteType: newVoteType,
+            userId: currentUser?._id || user?.sub,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        // Revert optimistic update on failure
+        setUpvoteCounts((prev) => new Map(prev).set(postId, originalUpvotes));
+        setDownvoteCounts((prev) =>
+          new Map(prev).set(postId, originalDownvotes)
+        );
+
+        const revertedVotedPosts = new Map(votedPosts);
+        if (originalVote === null) {
+          revertedVotedPosts.delete(postId);
+        } else {
+          revertedVotedPosts.set(postId, originalVote);
+        }
+        setVotedPosts(revertedVotedPosts);
+
+        throw new Error("Failed to update vote");
+      }
+
+      // Update with actual server response to ensure consistency
+      const updatedPost = await response.json();
+      setUpvoteCounts((prev) =>
+        new Map(prev).set(postId, updatedPost.upvotes?.length || 0)
+      );
+      setDownvoteCounts((prev) =>
+        new Map(prev).set(postId, updatedPost.downvotes?.length || 0)
+      );
+    } catch (error) {
+      console.error("Error voting:", error);
+    }
+  };
 
   const handleCreatePost = () => {
     navigate("/compose/post", {
@@ -261,7 +262,7 @@ const Feed = () => {
         const response = await fetch("http://localhost:3000/api/posts");
         const data = await response.json();
         setPosts(data);
-        console.log(data);
+        // console.log(data);
       } catch (err) {
         console.error("Error fetching posts:", err);
         setError("Failed to load posts.");
@@ -353,17 +354,15 @@ const Feed = () => {
                 key={community._id}
                 to={`/community/${community.name}`}
                 state={{ user: currentUser }}
-                className="flex items-center gap-2 text-[#d7dadc] hover:text-white hover:bg-[#1a1a1a] py-1 rounded-xl transition-all duration-300">
+                className="flex items-center gap-2 text-[#d7dadc] hover:text-white py-1 rounded-xl transition-all duration-300">
                 {community.avatarUrl ? (
                   <img
                     src={community.avatarUrl}
                     alt={community.name}
                     className="w-12 h-12 object-cover"
                   />
-                ) : (" "
-                  // <div className="bg-[#272b30] p-1.5 rounded-full">
-                  //   <Users size={16} className="text-[#AD49E1]" />
-                  // </div>
+                ) : (
+                  " "
                 )}
                 <div>
                   <div className="font-bold text-sm">c/{community.name}</div>
@@ -498,7 +497,8 @@ const Feed = () => {
                   return (
                     <article
                       key={post._id}
-                      className="bg-gradient-to-br from-transparent to-gray-50/10 rounded-3xl overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl"
+                      className="bg-[#010101] rounded-3xl overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl"
+                      // className="bg-gradient-to-br from-transparent to-gray-50/10 rounded-3xl overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl"
                       style={{ minHeight: "400px" }}>
                       {/* Post Image - First */}
                       {post.imageUrl?.length > 0 && (
@@ -520,16 +520,28 @@ const Feed = () => {
                         {/* Post Header */}
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <img
-                              className="w-12 h-12  object-cover object-center"
-                              src={post.community_dp}
-                              alt="community"
-                            />
+                            <Link
+                              key={post.communityHandle}
+                              to={`/community/${post.communityHandle}`}
+                              state={{ user: currentUser }}>
+                              <img
+                                className="w-12 h-12  object-cover object-center"
+                                src={post.community_dp}
+                                alt="community"
+                              />
+                            </Link>
+
                             <div>
-                              <h2 className="text-white font-medium">
-                                c/{post.communityHandle || "Astronomy"}
-                              </h2>
-                              <p className="text-[#818384] text-sm flex items-center">
+                              <Link
+                                key={post.communityHandle}
+                                to={`/community/${post.communityHandle}`}
+                                state={{ user: currentUser }}>
+                                <h2 className="text-white font-medium  text-[14px] ">
+                                  c/{post.communityHandle || "Astronomy"}
+                                </h2>
+                              </Link>
+
+                              <p className="text-[#818384] text-[12px]  flex items-center">
                                 <span>
                                   e/
                                   {(post.userHandle || "anonymous")
@@ -561,7 +573,7 @@ const Feed = () => {
                         </Link>
 
                         {/* Post Content */}
-                        <div className="mb-6 text-[#d7dadc] leading-relaxed">
+                        <div className="mb-2 text-[#d7dadc] leading-relaxed">
                           {isExpanded ? (
                             <p className="text-[12.5px]">{post.description}</p>
                           ) : (
@@ -581,27 +593,6 @@ const Feed = () => {
                           )}
                         </div>
 
-                        {/* Tags */}
-                        {post.tags?.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-1">
-                            {(isExpanded
-                              ? post.tags
-                              : post.tags.slice(0, 3)
-                            ).map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-[#AD49E1] px-3 rounded-full text-[11px] font-medium cursor-pointer">
-                                #{tag}
-                              </span>
-                            ))}
-                            {!isExpanded && post.tags.length > 3 && (
-                              <span className="text-[#818384] text-sm py-1.5 px-2">
-                                +{post.tags.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        )}
-
                         {/* Action Bar */}
                         <div className="flex items-center justify-between pt-2">
                           <div className="flex items-center gap-4">
@@ -618,31 +609,29 @@ const Feed = () => {
                             </Link>
 
                             {/* YouTube-style Vote buttons with separate counts */}
-                            <div className="flex items-center bg-[#272b30] rounded-full">
+                            <div className="flex items-center">
                               <button
                                 onClick={() => handleVote(post._id, "up")}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-l-full transition-all duration-300 ${
-                                  userVote === "up"
-                                    ? "text-[#AD49E1] bg-[#AD49E1]/20"
-                                    : "text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a]"
-                                }`}>
-                                <ArrowUp size={16} />
-                                <span className="text-sm font-medium">
+                                className={`flex items-center gap-1 px-2 py-1 transition-all duration-200
+      ${
+        userVote === "up" ? "text-red-600" : "text-[#818384] hover:text-red-500"
+      }`}>
+                                <ChevronUp size={16} />
+                                <span className="text-xs font-medium">
                                   {formatVoteCount(upvoteCount)}
                                 </span>
                               </button>
 
-                              <div className="w-px h-8 bg-[#3a3a3a]"></div>
-
                               <button
                                 onClick={() => handleVote(post._id, "down")}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-r-full transition-all duration-300 ${
-                                  userVote === "down"
-                                    ? "text-[#7193ff] bg-[#7193ff]/20"
-                                    : "text-[#818384] hover:text-[#7193ff] hover:bg-[#1a1a1a]"
-                                }`}>
-                                <ArrowDown size={16} />
-                                <span className="text-sm font-medium">
+                                className={`flex items-center gap-1 px-2 py-1 transition-all duration-200
+      ${
+        userVote === "down"
+          ? "text-[#7193ff]"
+          : "text-[#818384] hover:text-[#7193ff]"
+      }`}>
+                                <ChevronDown size={16} />
+                                <span className="text-xs font-medium">
                                   {formatVoteCount(downvoteCount)}
                                 </span>
                               </button>

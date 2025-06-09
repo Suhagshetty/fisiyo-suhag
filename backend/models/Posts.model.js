@@ -49,9 +49,15 @@ const postSchema = new mongoose.Schema(
     community_dp: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
+    commentsandreplies: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Comment",
