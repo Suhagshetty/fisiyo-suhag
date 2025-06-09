@@ -2,10 +2,24 @@ import express from "express";
 import Post from "../models/Posts.model.js";
 import Comment from "../models/Comment.model.js";
 import mongoose from "mongoose";
+import OpenAI from "openai"; 
+import dotenv from "dotenv";
 import Community from "../models/community.model.js";
 import User from "../models/Users.model.js"
 
+dotenv.config();
+
 const router = express.Router();
+
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": "http://localhost:5173", // your local frontend URL
+    "X-Title": "FISIYO",
+  },
+});
+
 
 router.post("/create-post", async (req, res) => {
   try {
@@ -331,5 +345,122 @@ router.get("/posts/:postId/comments", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch comments" });
   }
 });
+ 
+
+
+router.post("/simulate-comment", async (req, res) => {
+  try {
+    // 1. Pick a random post
+    const [post] = await Post.aggregate([
+      { $match: { isActive: true } },
+      { $sample: { size: 1 } },
+    ]);
+    if (!post) return res.status(404).json({ error: "No posts found" });
+
+    // 2. Pick a random user
+    const [user] = await User.aggregate([
+      { $match: { isActive: true } },
+      { $sample: { size: 1 } },
+    ]);
+    if (!user) return res.status(404).json({ error: "No users found" });
+
+    // 3. Construct the AI prompt
+  
+
+const messyPersonas = [
+  // Stand-up Comedian
+  `im a comic scrolling thru feeds. saw POST: "${post.title}" (that's the big text) n "${post.description}" (the deets below). gotta roast BOTH in 60 words max. sarcasm only. typos welcome. sound like ur hyped on caffeine. no emojis.`,
+
+  // 5-year-old Genius
+  `be 5yo kid. POST is like: big words "${post.title}" n smol words "${post.description}". react silly - mix up space/dinos/crayons. bad spelling on purpose ("why" -> "y"). no deep thinky. 50 words max.`,
+
+  // Conspiracy Theorist
+  `ok LISTEN. POST has: "${post.title}" (headline) n "${post.description}" (details). connect BOTH to aliens/gubmint coverup. use *crazy* caps n typos. ramble bout ur bunker. keep it barely logical. no emojis.`,
+
+  // Philosophy Undergrad
+  `bruh POST structure: "${post.title}" = surface stuff, "${post.description}" = deeper? meh. overthink BOTH like ur in 3am rabbit hole. use "like" n "..." every sentence. sound pretentious but tired. 60 words max.`,
+
+  // Gamer
+  `AFK! POST: "${post.title}" (main quest) n "${post.description}" (side quest). react in gamer slang to BOTH. abbrevs EVERYTHING. sound toxic/hyped. typos intentional ("their" -> "there"). discord vibes. no emojis.`,
+
+  // Boomer Uncle
+  `hi its uncle jim. POST has title "${post.title}" n description "${post.description}" (too long didnt read). react confused but supportive. mention barbaras hip or "back in my day". spell wrong. no emojis.`,
+
+  // Sci-fi Writer
+  `*snaps fingers* POST: "${post.title}" = hook, "${post.description}" = lore. turn BOTH into story plot. chaotic typing. sound like u mainline espresso. plot twist ending? 2-60 words max. no emojis.`,
+
+  // Gen Alpha Kid
+  `skibidi! POST = "${post.title}" (clip bait?) n "${post.description}" (whatever). flex random "facts" bout BOTH. use gyatt/ratio/fanum tax. chaotic caps. no emojis.`,
+
+  // Nihilist Barista
+  `*sigh* POST: "${post.title}"... "${post.description}"... whatever. react dead inside to BOTH. "meh" "lol nothing matters". existential shrugs. dry af. no energy. no emojis.`,
+
+  // Chaotic Neutral AI
+  `beep boop ERROR- HUMAN MODE: saw POST "${post.title}" n "${post.description}". react weird but try fit in. *nervous sweating* use meme refs wrong. glitchy typing. no emojis just awkward.`
+];
+
+  
+const randomPersonaPrompt =
+  messyPersonas[Math.floor(Math.random() * messyPersonas.length)];
+    
+
+    // 4. Generate comment via OpenRouter
+    const completion = await openai.chat.completions.create({
+      model: "openai/gpt-4o",
+      messages: [{ role: "user", content: randomPersonaPrompt }],
+      max_tokens: 900,
+    });
+    
+
+    const generatedText = completion.choices[0].message.content;
+
+    // 5. Create new Comment instance
+    const newComment = new Comment({
+      body: generatedText,
+      author: user._id,
+      handle: user.handle,
+      post: post._id,
+      userDp: user.profilePicture || "default-avatar.png",
+    });
+
+    const savedComment = await newComment.save();
+
+    // 6. Update Post
+    await Post.findByIdAndUpdate(post._id, {
+      $push: {
+        comments: savedComment._id,
+        commentsandreplies: savedComment._id,
+      },
+    });
+
+    // 7. Update User
+    await User.findByIdAndUpdate(user._id, {
+      $push: {
+        comments: savedComment._id,
+      },
+    });
+
+    // 8. Return the result
+    res.status(201).json({
+      message: "Simulated comment created and saved successfully",
+      comment: savedComment,
+      user: {
+        _id: user._id,
+        name: user.name,
+        handle: user.handle,
+        profilePicture: user.profilePicture || "default-avatar.png",
+      },
+      post: {
+        _id: post._id,
+        title: post.title,
+        description: post.description,
+      },
+    });
+  } catch (err) {
+    console.error("Simulate-comment error:", err.message);
+    res.status(500).json({ error: "Failed to simulate comment" });
+  }
+});
+
 
 export default router;

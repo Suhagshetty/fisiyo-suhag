@@ -22,6 +22,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+ 
 app.use("/api/users", userRoutes);
 app.use("/api", postRoutes);
 app.use("/api/communities", commintyRoutes);

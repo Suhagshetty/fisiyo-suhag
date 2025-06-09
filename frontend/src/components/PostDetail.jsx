@@ -29,6 +29,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
   const [commentVotes, setCommentVotes] = useState({});
+  const [simulationActive, setSimulationActive] = useState(true); // Auto-start simulation
 
   // Fetch post and comments
   useEffect(() => {
@@ -65,6 +66,53 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
 
     fetchData();
   }, [post, postId]);
+
+  useEffect(() => {
+    if (!simulationActive) return;
+
+    const intervalTime = 5000; // 10 seconds between simulations
+    let simulationInterval;
+
+    // Start immediately, then repeat at intervals
+    const startSimulation = async () => {
+      await simulateComment();
+      simulationInterval = setInterval(simulateComment, intervalTime);
+    };
+
+    startSimulation();
+
+    // Cleanup on unmount or when simulation is turned off
+    return () => {
+      if (simulationInterval) {
+        clearInterval(simulationInterval);
+      }
+    };
+  }, [simulationActive]); // Re-run when these values change
+
+  const simulateComment = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:3000/api/simulate-comment",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!res.ok) throw new Error("Simulation failed");
+
+      const data = await res.json();
+      console.log("Simulated comment:", data.comment.body);
+
+      // Refresh comments after simulation
+      fetchComments();
+
+      return data.comment;
+    } catch (error) {
+      console.error("Simulate comment error:", error);
+      return null;
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "now";
@@ -107,7 +155,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
         body: replyContent,
         author: user._id || user?.sub,
         handle: user?.handle || user?.userHandle || "Anonymous",
-        userDp: user.profilePicture, 
+        userDp: user.profilePicture,
       };
 
       const response = await fetch(
@@ -152,8 +200,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     }
   }, [postId, fetchComments]);
 
-  
-
   const renderComment = (comment, depth = 0) => {
     const isReplying = replyingTo === comment._id;
 
@@ -176,7 +222,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
               />
               <div>
                 <span className="text-sm font-medium text-white">
-                 c/{comment.handle || "Anonymous"}
+                  c/{comment.handle || "Anonymous"}
                 </span>
                 <span className="text-xs text-[#818384] ml-2">
                   {new Date(comment.createdAt).toLocaleString("en-US", {
@@ -265,7 +311,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
       </div>
     );
   };
-  
 
   // Update the comment rendering to handle nested replies
   {
@@ -449,21 +494,23 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
 
   return (
     <div
-    className={`${
-      isModal
-      ? "fixed inset-0 z-50 overflow-y-auto"
-      : "min-h-screen bg-[#030303]"
-    }`}>
+      className={`${
+        isModal
+          ? "fixed inset-0 z-50 overflow-y-auto"
+          : "min-h-screen bg-[#030303]"
+      }`}>
       {isModal && (
         <div
-        onClick={handleClose}
+          onClick={handleClose}
           className="fixed inset-0 bg-[#AD49E1]/20 backdrop-blur-xs transition-opacity"
         />
       )}
 
       <div
         className={`relative ${
-          isModal ? "flex items-center justify-center min-h-screen sm:pt-20 pt-0" : ""
+          isModal
+            ? "flex items-center justify-center min-h-screen sm:pt-20 pt-0"
+            : ""
         }`}>
         <div
           className={`bg-[#0A0A0A] sm:rounded-2xl overflow-hidden border border-[#1E1E1E] shadow-2xl ${
