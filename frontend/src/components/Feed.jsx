@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import FollowerSuggestions from "./FollowerSuggestions";
 import {
   Menu,
   X,
@@ -33,6 +34,7 @@ const Feed = () => {
   const [votedPosts, setVotedPosts] = useState(new Map());
   const location = useLocation();
   const [upvoteCounts, setUpvoteCounts] = useState(new Map());
+  const [savedPosts, setSavedPosts] = useState(new Set());
   const [downvoteCounts, setDownvoteCounts] = useState(new Map());
   const navigate = useNavigate();
   const [communities, setCommunities] = useState([]);
@@ -69,6 +71,46 @@ const Feed = () => {
 
     fetchCommunities();
   }, []);
+
+  const handleSavePost = async (postId) => {
+    if (!currentUser?._id) return;
+
+    const isCurrentlySaved = savedPosts.has(postId);
+    const newSavedPosts = new Set(savedPosts);
+
+    // Optimistic UI update
+    if (isCurrentlySaved) {
+      newSavedPosts.delete(postId);
+    } else {
+      newSavedPosts.add(postId);
+    }
+    setSavedPosts(newSavedPosts);
+
+    try {
+      const endpoint = isCurrentlySaved
+        ? "http://localhost:3000/api/users/unsave-post"
+        : "http://localhost:3000/api/users/save-post";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser._id,
+          postId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to ${isCurrentlySaved ? "unsave" : "save"} post`
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      // Revert on error
+      setSavedPosts(savedPosts);
+    }
+  };
 
   // Load user's existing votes when component mounts
   useEffect(() => {
@@ -113,7 +155,25 @@ const Feed = () => {
       setDownvoteCounts(initialDownvoteCounts);
     }
   }, [posts]);
+  useEffect(() => {
+    const fetchSavedPosts = async () => {
+      if (currentUser?._id) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/users/saved-posts/${currentUser._id}`
+          );
+          if (response.ok) {
+            const saved = await response.json();
+            setSavedPosts(new Set(saved.map((post) => post._id)));
+          }
+        } catch (error) {
+          console.error("Error loading saved posts:", error);
+        }
+      }
+    };
 
+    fetchSavedPosts();
+  }, [currentUser]);
   // Updated handleVote function to manage separate counts
   const handleVote = async (postId, voteType) => {
     try {
@@ -275,8 +335,8 @@ const Feed = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e1e1e1] flex">
-      {/* Sidebar - Fixed 300px width */}
+    <div className="h-screen bg-[#0a0a0a] text-[#e1e1e1] flex overflow-hidden">
+      {/* Sidebar - Fixed 300px width with individual scrolling */}
       <nav
         className={`w-[300px] bg-[#111111] flex flex-col transition-all duration-300 z-30
         lg:block lg:relative lg:translate-x-0
@@ -289,8 +349,8 @@ const Feed = () => {
         style={{
           fontFamily: "'IBM Plex Sans', sans-serif",
         }}>
-        {/* Sidebar Header */}
-        <div className="p-6">
+        {/* Sidebar Header - Fixed */}
+        <div className="p-6 flex-shrink-0">
           <div className="flex items-center justify-between mb-1">
             <h1
               className="text-2xl font-bold text-white flex items-center gap-2"
@@ -303,17 +363,10 @@ const Feed = () => {
               <X size={20} />
             </button>
           </div>
-
-          {/* <button
-            onClick={handleCreatePost}
-            className="w-full bg-[#AD49E1] text-white font-medium py-3 px-6 rounded-full transition-all duration-300 text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
-            <Plus size={16} />
-            <span>Create Post</span>
-          </button> */}
         </div>
 
-        {/* Navigation Menu */}
-        <div className="flex-1 ">
+        {/* Navigation Menu - Scrollable */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#AD49E1]/60 scrollbar-track-[#1a1a1a]/80">
           <div className="space-y-2 px-2">
             <button
               onClick={() =>
@@ -341,44 +394,43 @@ const Feed = () => {
               <span>New Community</span>
             </button>
           </div>
-        </div>
 
-        {/* Communities Section */}
-        <div className="mt-auto px-6 py-4">
-          <h3 className="text-xs uppercase tracking-wider text-[#818384] mb-3 px-2">
-            Popular Communities
-          </h3>
-          <div className="space-y-1.5">
-            {communities.map((community) => (
-              <Link
-                key={community._id}
-                to={`/community/${community.name}`}
-                state={{ user: currentUser }}
-                className="flex items-center gap-2 text-[#d7dadc] hover:text-white py-1 rounded-xl transition-all duration-300">
-                {community.avatarUrl ? (
-                  <img
-                    src={community.avatarUrl}
-                    alt={community.name}
-                    className="w-12 h-12 object-cover"
-                  />
-                ) : (
-                  " "
-                )}
-                <div>
-                  <div className="font-bold text-sm">c/{community.name}</div>
-                  <div className="text-xs text-[#818384]">
-                    {community.memberCount} members
+          {/* Communities Section */}
+          <div className="mt-8 px-6 py-4">
+            <h3 className="text-xs uppercase tracking-wider text-[#818384] mb-3 px-2">
+              Popular Communities
+            </h3>
+            <div className="space-y-1.5">
+              {communities.map((community) => (
+                <Link
+                  key={community._id}
+                  to={`/c/${community.name}`}
+                  state={{ user: currentUser }}
+                  className="flex items-center gap-2 text-[#d7dadc] hover:text-white py-1 rounded-xl transition-all duration-300">
+                  {community.avatarUrl ? (
+                    <img
+                      src={community.avatarUrl}
+                      alt={community.name}
+                      className="w-12 h-12 object-cover"
+                    />
+                  ) : (
+                    " "
+                  )}
+                  <div>
+                    <div className="font-bold text-sm">c/{community.name}</div>
+                    <div className="text-xs text-[#818384]">
+                      {community.memberCount} members
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* User Section */}
-        {/* User Section */}
+        {/* User Section - Fixed at bottom */}
         {isAuthenticated && (
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 flex-shrink-0">
             <button
               onClick={() => logout({ returnTo: window.location.origin })}
               className="flex items-center gap-4 text-[#d7dadc] hover:text-red-400 hover:bg-[#1a1a1a] w-full px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm">
@@ -397,10 +449,10 @@ const Feed = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-[#111111]/80 backdrop-blur-xl sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header - Fixed */}
+        <header className="bg-[#111111]/80 backdrop-blur-xl z-40 flex-shrink-0">
+          <div className="max-w-7xl mx-auto sm:px-6 px-2 py-2 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleSidebar}
@@ -410,7 +462,7 @@ const Feed = () => {
             </div>
 
             {/* Search bar */}
-            <div className="flex-1 max-w-2xl mx-8">
+            <div className="flex-1 sm:max-w-2xl max-w-3xl ml-3 sm:mx-8">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Search size={18} className="text-[#818384]" />
@@ -418,18 +470,18 @@ const Feed = () => {
                 <input
                   type="text"
                   placeholder="Search Fisiyo"
-                  className="w-full pl-12 pr-6 py-3 bg-[#1a1a1a] rounded-full focus:ring-2 focus:ring-[#AD49E1] focus:bg-[#222222] transition-all duration-300 text-sm text-white placeholder-[#818384] shadow-inner"
+                  className="w-full pl-12 pr-6 py-2.5 bg-[#1a1a1a] rounded-full focus:ring-2 focus:ring-[#AD49E1] focus:bg-[#222222] transition-all duration-300 text-sm text-white placeholder-[#818384] shadow-inner"
                 />
               </div>
             </div>
 
             {isAuthenticated && (
-              <div className="flex items-center gap-4">
-                <button className="text-[#818384] hover:text-white p-3 rounded-full hover:bg-[#1a1a1a] transition-all duration-300">
+              <div className="flex items-center gap-0 sm:gap-4">
+                <button className="text-[#818384] hover:text-white sm:p-3 px-1 rounded-full hover:bg-[#1a1a1a] transition-all duration-300">
                   <Bell size={20} />
                 </button>
                 <div
-                  className="flex items-center gap-3 cursor-pointer hover:bg-[#1a1a1a] px-3 py-2 rounded-xl transition-all duration-300"
+                  className=" cursor-pointer hover:bg-[#1a1a1a] px-2 sm:px-3 py-2 rounded-xl transition-all duration-300"
                   onClick={() =>
                     navigate("/profile", { state: { user: currentUser } })
                   }>
@@ -439,24 +491,25 @@ const Feed = () => {
                       "/default-avatar.png"
                     }
                     alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover"
-                  />
-                  <ChevronDown size={16} className="text-[#818384]" />
+                    className="sm:w-9 sm:h-9 w-7 h-7 rounded-full object-cover"
+                  /> 
                 </div>
               </div>
             )}
           </div>
         </header>
 
-        {/* Feed Content */}
+        {/* Feed Content - Scrollable container */}
         <main
-          className="flex-1 overflow-y-auto bg-[#0a0a0a]"
+          className="flex-1 bg-[#0a0a0a] overflow-hidden"
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-          {/* Centered Container for Posts */}
-          <div className="flex justify-around">
-            <div className="w-full max-w-2xl">
+          {/* Centered Container for Posts and Suggestions */}
+          <div className="flex h-full justify-around">
+            {/* Posts Section - Individually scrollable */}
+
+            <div className="flex-1 w-[58%] overflow-y-auto  sm:p-2 ">
               {loading && (
-                <div className="flex justify-center py-20">
+                <div className="flex justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
                 </div>
               )}
@@ -489,7 +542,7 @@ const Feed = () => {
               )}
 
               {!loading && posts.length > 0 && (
-                <div className="space-y-0">
+                <div className="space-y-0  sm:rounded-2xl overflow-hidden sm:border  border-[#222] ">
                   {posts.map((post) => {
                     const isExpanded = expandedPosts.has(post._id);
                     const userVote = votedPosts.get(post._id);
@@ -499,18 +552,16 @@ const Feed = () => {
                     return (
                       <article
                         key={post._id}
-                        className="bg-[#010101] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl border-b border-[#1a1a1a]"
+                        className="bg-[#111111] sm:border-b  border-[#222]  overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl "
                         style={{ minHeight: "400px" }}>
-                        {/* Post Image - First */}
-
                         {/* Post Content */}
-                        <div className="pt-3 px-6 py-2">
+                        <div className="pt-3  py-2">
                           {/* Post Header */}
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center justify-between sm:px-6 px-2  mb-1">
                             <div className="flex items-center gap-3 mb-1">
                               <Link
                                 key={post.communityHandle}
-                                to={`/community/${post.communityHandle}`}
+                                to={`/c/${post.communityHandle}`}
                                 state={{ user: currentUser }}>
                                 <img
                                   className="w-12 h-12 object-cover object-center"
@@ -522,16 +573,16 @@ const Feed = () => {
                               <div>
                                 <Link
                                   key={post.communityHandle}
-                                  to={`/community/${post.communityHandle}`}
+                                  to={`/c/${post.communityHandle}`}
                                   state={{ user: currentUser }}>
-                                  <h2 className="text-white font-medium text-[14px]">
+                                  <h2 className="text-white font-medium text-[15px]">
                                     c/{post.communityHandle || "Astronomy"}
                                   </h2>
                                 </Link>
 
                                 <p className="text-[#818384] text-[12px] flex items-center">
                                   <span>
-                                    e/
+                                    n/
                                     {(post.userHandle || "anonymous")
                                       .toLowerCase()
                                       .replace(/\s+/g, "")}
@@ -554,31 +605,41 @@ const Feed = () => {
                               user: currentUser,
                               backgroundLocation: location,
                             }}
-                            className="text-[18px] font-bold text-white mb-4 leading-tight cursor-pointer hover:text-[#AD49E1] transition-colors duration-300 block"
+                            className="text-[18px] font-bold text-white mb-4 sm:px-6 px-2 leading-tight cursor-pointer hover:text-[#AD49E1] transition-colors duration-300 block"
                             onClick={() => togglePostExpansion(post._id)}>
                             {post.title || "Research Summary"}
                           </Link>
                           {post.imageUrl?.length > 0 && (
-                            <div className="relative mb-4 bg-[#0b0b0b] overflow-hidden">
-                              <img
-                                src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
-                                alt="Post content"
-                                className={`mx-auto cursor-pointer transition-transform duration-500 hover:scale-105 ${
-                                  isExpanded
-                                    ? "w-full max-h-[600px]"
-                                    : "w-[70%] max-h-[400px]"
-                                } object-contain `}
-                                onClick={() =>
-                                  !isExpanded && togglePostExpansion(post._id)
-                                }
-                              />
-
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            // #101010 #0b0b0b
+                            <div className="relative mb-4 bg-[#101010] overflow-hidden">
+                              <div
+                                className="w-full"
+                                style={{ minHeight: "300px" }} // prevents collapse before image loads
+                              >
+                                <img
+                                  src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
+                                  alt="Post content"
+                                  className={`mx-auto w-full h-auto max-h-[600px] object-contain cursor-pointer transition-all duration-500 ease-in-out
+                                  ${
+                                    isExpanded
+                                      ? "opacity-100 blur-0"
+                                      : "opacity-100 blur-sm"
+                                  }`}
+                                  style={{
+                                    transition:
+                                      "filter 0.4s ease, opacity 0.4s ease",
+                                  }}
+                                  onClick={() => togglePostExpansion(post._id)}
+                                  onLoad={(e) => {
+                                    e.target.classList.remove("blur-sm");
+                                  }}
+                                />
+                              </div>
                             </div>
                           )}
 
                           {/* Post Content */}
-                          <div className="mb-0 text-[#d7dadc] leading-relaxed">
+                          <div className="mb-0 text-[#d7dadc] sm:px-6 px-2 leading-relaxed">
                             {isExpanded ? (
                               <p className="text-[14px]">{post.description}</p>
                             ) : (
@@ -650,9 +711,24 @@ const Feed = () => {
                                 <Share size={16} />
                                 <span className="hidden sm:inline">Share</span>
                               </button>
-                              <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                                <Bookmark size={16} />
-                                <span className="hidden sm:inline">Save</span>
+                              <button
+                                onClick={() => handleSavePost(post._id)}
+                                className={`flex items-center gap-2 hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm ${
+                                  savedPosts.has(post._id)
+                                    ? "text-[#AD49E1] hover:text-[#AD49E1]"
+                                    : "text-[#818384] hover:text-white"
+                                }`}>
+                                <Bookmark
+                                  size={16}
+                                  fill={
+                                    savedPosts.has(post._id)
+                                      ? "#AD49E1"
+                                      : "none"
+                                  }
+                                />
+                                <span className="hidden sm:inline">
+                                  {savedPosts.has(post._id) ? "Saved" : "Save"}
+                                </span>
                               </button>
 
                               {isExpanded && (
@@ -675,8 +751,14 @@ const Feed = () => {
               )}
             </div>
 
-            <div className="sm:w-[30%] w-0 rounded-3xl  bg-gray-900
-            ">hhhhhhhhhhh</div>
+            {/* Follower Suggestions - Individually scrollable */}
+            <div
+              className="w-[33%] bg-[#0a0a0a] p-2 overflow-y-auto hidden sm:block scrollbar scrollbar-thumb-[#AD49E1]/70 scrollbar-track-[#1a1a1a] scrollbar-rounded
+">
+              <div className="rounded-3xl h-full">
+                <FollowerSuggestions currentUser={currentUser} />
+              </div>
+            </div>
           </div>
         </main>
       </div>

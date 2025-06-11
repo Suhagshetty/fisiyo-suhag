@@ -97,8 +97,8 @@ const CommunitySetup = () => {
       );
 
       console.log("Community created:", response.data);
-      console.log(`/community/${response.data.name}`);
-      navigate(`/community/${response.data.name}`, {
+      console.log(`/c/${response.data.name}`);
+      navigate(`/c/${response.data.name}`, {
         state: { user: currentUser },
       });
     } catch (error) {

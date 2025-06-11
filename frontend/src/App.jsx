@@ -12,6 +12,7 @@ import Explore from "./components/Explore";
 import CommunityPage from "./components/CommunityPage";
 import CreatePoll from "./components/CreatePoll";
 import CreateDiscussion from "./components/CreateDiscussion";
+import ProfilePage from "./components/ProfilePage";
 
 function App() {
   const location = useLocation();
@@ -31,7 +32,8 @@ function App() {
         <Route path="/post-login-check" element={<PostLoginCheck />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/community-setup" element={<CommunityCreator />} />
-        <Route path="/community/:name" element={<CommunityPage />} />
+        <Route path="/c/:name" element={<CommunityPage />} />
+        <Route path="/n/:name" element={<ProfilePage />} />
 
         <Route path="/post/:postId" element={<PostDetail />} />
         <Route path="/compose/post" element={<CreatePost isModal={false} />} />

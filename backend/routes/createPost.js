@@ -345,7 +345,58 @@ router.get("/posts/:postId/comments", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch comments" });
   }
 });
- 
+router.delete("/comments/:commentId", async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const { handle } = req.body;
+
+    if (!handle) {
+      return res.status(400).json({ error: "Missing user handle" });
+    }
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    // Compare handles
+    if (comment.handle !== handle) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized to delete this comment" });
+    }
+
+    // Recursive delete
+    const deleteCommentAndReplies = async (id) => {
+      const commentToDelete = await Comment.findById(id);
+      if (!commentToDelete) return 0;
+
+      let deleteCount = 0;
+
+      for (const replyId of commentToDelete.replies) {
+        deleteCount += await deleteCommentAndReplies(replyId);
+      }
+
+      await Comment.findByIdAndDelete(id);
+      return deleteCount + 1;
+    };
+
+    const deleteCount = await deleteCommentAndReplies(commentId);
+
+    await Post.findByIdAndUpdate(
+      comment.post,
+      { $inc: { commentCount: -deleteCount } },
+      { new: true }
+    );
+
+    res
+      .status(200)
+      .json({ message: "Comment and replies deleted", count: deleteCount });
+  } catch (err) {
+    console.error("Delete comment error:", err);
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+});
 
 
 router.post("/simulate-comment", async (req, res) => {

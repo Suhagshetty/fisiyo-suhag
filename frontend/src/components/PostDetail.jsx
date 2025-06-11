@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+
+import { useRef } from "react";
+import { Link } from "react-router-dom";
 import {
   MessageSquare,
   Share,
@@ -19,7 +22,11 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const [post, setPost] = useState(state?.post || null);
   const [user, setUser] = useState(state?.user || null);
   console.log(user);
+  
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const currentUserId = user?._id || user?.sub;
 
+  
   const [loading, setLoading] = useState(!post);
   const [voted, setVoted] = useState(null);
   const [newComment, setNewComment] = useState("");
@@ -27,9 +34,67 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const [voteCount, setVoteCount] = useState(0);
   const [isCommenting, setIsCommenting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [hoveredUser, setHoveredUser] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
   const [replyContent, setReplyContent] = useState("");
   const [commentVotes, setCommentVotes] = useState({});
-  const [simulationActive, setSimulationActive] = useState(true); // Auto-start simulation
+  const [simulationActive, setSimulationActive] = useState(false);
+  const hoverTimeoutRef = useRef(null);
+const [isHoveringCard, setIsHoveringCard] = useState(false);
+
+useEffect(() => {
+  return () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+  };
+}, []);
+  const UserProfileCard = ({ user, position }) => {
+    if (!user) return null;
+
+    return (
+      <div
+        className="fixed z-50 bg-[#161617] border border-[#1E1E1E] rounded-xl p-4 w-64 shadow-lg pointer-events-none"
+        style={{
+          top: position.top + 10,
+          left: Math.max(10, Math.min(position.left, window.innerWidth - 270)),
+        }}
+        onMouseEnter={() => {
+          setIsHoveringCard(true);
+          if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+          }
+        }}
+        onMouseLeave={() => {
+          setIsHoveringCard(false);
+          hoverTimeoutRef.current = setTimeout(() => {
+            setHoveredUser(null);
+          }, 300);
+        }}>
+        
+        <div className="flex flex-col items-center">
+          <img
+            className="w-16 h-16 rounded-full mb-3"
+            src={
+              user.userDp
+                ? `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${user.userDp}`
+                : "/default-avatar.png"
+            }
+            alt="avatar"
+            onError={(e) => {
+              e.target.src = "/default-avatar.png";
+            }}
+          />
+          <h3 className="text-white font-medium">n/{user.handle}</h3>
+          <button
+            onClick={() => console.log(`followed ${user.handle}`)}
+            className="mt-3 w-full py-1  text-white rounded-l border border-white font-medium hover:bg-[#AD49E1]/90 transition-colors pointer-events-auto">
+            Follow
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Fetch post and comments
   useEffect(() => {
@@ -52,9 +117,9 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           );
           if (!commentsRes.ok) throw new Error("Failed to fetch comments");
           const commentsData = await commentsRes.json();
+          console.log(commentsData);
 
           setComments(commentsData);
-
           setVoteCount(postData.upvotes - postData.downvotes);
         } catch (err) {
           console.error("Error fetching data:", err);
@@ -70,10 +135,9 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   useEffect(() => {
     if (!simulationActive) return;
 
-    const intervalTime = 5000; // 10 seconds between simulations
+    const intervalTime = 5000;
     let simulationInterval;
 
-    // Start immediately, then repeat at intervals
     const startSimulation = async () => {
       await simulateComment();
       simulationInterval = setInterval(simulateComment, intervalTime);
@@ -81,30 +145,93 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
 
     startSimulation();
 
-    // Cleanup on unmount or when simulation is turned off
     return () => {
       if (simulationInterval) {
         clearInterval(simulationInterval);
       }
     };
-  }, [simulationActive]); // Re-run when these values change
+  }, [simulationActive]);
+
+  const handleSavePost = async (postId) => {
+    if (!currentUser?._id) return;
+
+    const isCurrentlySaved = savedPosts.has(postId);
+    const newSavedPosts = new Set(savedPosts);
+
+    // Optimistic UI update
+    if (isCurrentlySaved) {
+      newSavedPosts.delete(postId);
+    } else {
+      newSavedPosts.add(postId);
+    }
+    setSavedPosts(newSavedPosts);
+
+    try {
+      const endpoint = isCurrentlySaved
+        ? "http://localhost:3000/api/users/unsave-post"
+        : "http://localhost:3000/api/users/save-post";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser._id,
+          postId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to ${isCurrentlySaved ? "unsave" : "save"} post`
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      // Revert on error
+      setSavedPosts(savedPosts);
+    }
+  };
+
+  const handleDeleteComment = async (commentId, userHandle) => {
+    // if (!window.confirm("Delete this comment and all its replies?")) return;
+
+    setDeletingCommentId(commentId);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/comments/${commentId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ handle: userHandle }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Delete failed");
+
+      await fetchComments();
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Failed to delete comment");
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+  
 
   const simulateComment = async () => {
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/simulate-comment",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await fetch("http://localhost:3000/api/simulate-comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
 
       if (!res.ok) throw new Error("Simulation failed");
 
       const data = await res.json();
       console.log("Simulated comment:", data.comment.body);
 
-      // Refresh comments after simulation
       fetchComments();
 
       return data.comment;
@@ -130,23 +257,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     return date.toLocaleDateString();
   };
 
-  useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const commentsRes = await fetch(
-          `http://localhost:3000/api/posts/${postId}/comments`
-        );
-        const commentsData = await commentsRes.json();
-        setComments(commentsData);
-      } catch (err) {
-        console.error("Error fetching comments:", err);
-      }
-    };
-
-    if (postId) fetchComments();
-  }, [postId]);
-
-  // Update the reply submission handler
   const handleReplySubmit = async (parentCommentId) => {
     if (!replyContent.trim() || !user || !post) return;
 
@@ -169,7 +279,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
 
       if (!response.ok) throw new Error("Failed to post reply");
 
-      // Refetch comments to update UI
       await fetchComments();
       setReplyContent("");
       setReplyingTo(null);
@@ -178,7 +287,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     }
   };
 
-  // Create a dedicated fetchComments function
   const fetchComments = useCallback(async () => {
     if (!postId) return;
     try {
@@ -187,13 +295,14 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
       );
       if (!commentsRes.ok) throw new Error("Failed to fetch comments");
       const commentsData = await commentsRes.json();
+      console.log(commentsData);
+
       setComments(commentsData);
     } catch (err) {
       console.error("Error fetching comments:", err);
     }
   }, [postId]);
 
-  // Use useEffect to fetch comments
   useEffect(() => {
     if (postId) {
       fetchComments();
@@ -207,28 +316,63 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
       <div
         key={comment._id}
         className={`pl-2 mt-3 ${
-          depth > 0 ? "  border-l border-[#1E1E1E]" : " "
+          depth > 0 ? "border-l border-[#1E1E1E]" : ""
         } transition-colors duration-200`}>
         <div className="flex gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-0.5">
-              <img
-                className="w-8 h-8 rounded-full"
-                src={
-                  `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${comment.userDp}` ||
-                  "/default-avatar.png"
-                }
-                alt="avatar"
-              />
+              <Link
+                to={`/n/${comment.handle}`}
+                state={{ user: user, handle: comment.handle }}
+                className="">
+                <img
+                  className="w-8 h-8 rounded-full"
+                  src={
+                    comment.userDp
+                      ? `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${comment.userDp}`
+                      : "/default-avatar.png"
+                  }
+                  alt="avatar"
+                  onError={(e) => {
+                    e.target.src = "/default-avatar.png";
+                  }}
+                />
+              </Link>
               <div>
-                <span className="text-sm font-medium text-white">
-                  c/{comment.handle || "Anonymous"}
-                </span>
+                <Link
+                  to={`/n/${comment.handle}`}
+                  state={{ user: user, handle: comment.handle }}>
+                  <span
+                    className="text-sm font-medium text-white hover:underline cursor-pointer"
+                    onMouseEnter={(e) => {
+                      const rect = e.target.getBoundingClientRect();
+                      setHoveredUser({
+                        handle: comment.handle,
+                        userDp: comment.userDp,
+                      });
+                      setHoverPosition({
+                        top: rect.bottom + window.scrollY,
+                        left: rect.left + window.scrollX,
+                      });
+
+                      if (hoverTimeoutRef.current) {
+                        clearTimeout(hoverTimeoutRef.current);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (!isHoveringCard) {
+                        hoverTimeoutRef.current = setTimeout(() => {
+                          setHoveredUser(null);
+                        }, 300);
+                      }
+                    }}>
+                    n/{comment.handle || "Anonymous"}
+                  </span>
+                </Link>
                 <span className="text-xs text-[#818384] ml-2">
                   {new Date(comment.createdAt).toLocaleString("en-US", {
                     month: "short",
                     day: "numeric",
-                    // year: "numeric",
                     hour: "numeric",
                     minute: "numeric",
                     hour12: true,
@@ -236,8 +380,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                 </span>
               </div>
             </div>
-
-            {/* Inside <div className="flex-1">, after the comment body */}
 
             <p className="text-[#d7dadc] pl-11 mb-0.5 mr-2">{comment.body}</p>
 
@@ -276,6 +418,20 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                     <ChevronDown size={18} />
                   </button>
                 </div>
+
+                {currentUserId === comment.author && (
+                  <button
+                    onClick={() => handleDeleteComment(comment._id, user.handle)}
+                    disabled={deletingCommentId === comment._id}
+                    className={`text-[#818384] hover:text-red-500 font-medium transition-colors ${
+                      deletingCommentId === comment._id ? "animate-pulse" : ""
+                    }`}>
+                    {deletingCommentId === comment._id ? (
+                      <Loader2 className="animate-spin h-4 w-4 inline mr-1" />
+                    ) : null}
+                    Delete
+                  </button>
+                )}
               </div>
 
               {isReplying && (
@@ -304,7 +460,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
               )}
             </div>
 
-            {/* Recursively render nested replies */}
             {comment.replies?.map((reply) => renderComment(reply, depth + 1))}
           </div>
         </div>
@@ -312,49 +467,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     );
   };
 
-  // Update the comment rendering to handle nested replies
-  {
-    comments.map((comment) => (
-      <div key={comment._id}>
-        {/* Main comment rendering... */}
-
-        {/* Render replies */}
-        {comment.replies?.map((reply) => (
-          <div key={reply._id} className="ml-10 pl-4 border-l border-[#1E1E1E]">
-            {/* Reply rendering... */}
-          </div>
-        ))}
-
-        {/* Reply form */}
-        {replyingTo === comment._id && (
-          <div className="ml-10 mt-4">
-            <textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-[#1E1E1E] rounded-xl p-3 text-white placeholder-[#818384] focus:outline-none focus:border-[#AD49E1]/50 transition-colors"
-              placeholder="Write a reply..."
-              rows={3}
-            />
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={() => handleReplySubmit(comment._id)}
-                disabled={!replyContent.trim()}
-                className={`flex items-center gap-2 font-medium py-1.5 px-5 rounded-full text-sm transition-all ${
-                  !replyContent.trim()
-                    ? "bg-[#AD49E1]/50 cursor-not-allowed"
-                    : "bg-[#AD49E1] hover:bg-[#AD49E1]/90"
-                }`}>
-                <Send size={14} />
-                Reply
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    ));
-  }
-
-  // Submit comment handler
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !user || !post) return;
 
@@ -395,7 +507,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     }
   };
 
-  // Vote handler
   const handleVote = async (voteType) => {
     if (!user || !post) return;
 
@@ -405,7 +516,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
       let newCount = currentCount;
       let newVoteType = null;
 
-      // Vote calculation logic
       if (currentVote === "up" && voteType === "up") {
         newCount = currentCount - 1;
       } else if (currentVote === "up" && voteType === "down") {
@@ -424,11 +534,9 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
         newVoteType = "down";
       }
 
-      // Optimistic update
       setVoteCount(newCount);
       setVoted(newVoteType);
 
-      // API call
       await fetch(`http://localhost:3000/api/posts/${post._id}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -442,7 +550,6 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
     }
   };
 
-  // Comment vote handler
   const handleCommentVote = (commentId, voteType) => {
     setCommentVotes((prev) => ({
       ...prev,
@@ -514,24 +621,24 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
         }`}>
         <div
           className={`bg-[#0A0A0A] sm:rounded-2xl overflow-hidden border border-[#1E1E1E] shadow-2xl ${
-            isModal ? "w-full max-w-3xl" : "max-w-3xl mx-auto my-8"
+            isModal ? "w-full max-w-4xl" : "max-w-4xl mx-auto my-8"
           }`}>
           {/* Header */}
-          <div className="p-6   flex justify-between items-start">
+          <div className="sm:p-6 p-2 flex justify-between items-start">
             <div>
               <div className="flex items-center gap-3 mb-0">
                 <img
-                  className="w-12 h-12  object-cover object-center"
+                  className="w-12 h-12 object-cover object-center"
                   src={post.community_dp}
                   alt="community"
                 />
                 <div>
-                  <h2 className="text-white font-medium">
+                  <h2 className="text-white sm:text-base text-sm font-medium">
                     c/{post.communityHandle || "Astronomy"}
                   </h2>
-                  <p className="text-[#818384] text-sm flex items-center">
+                  <p className="text-[#818384] sm:text-sm text-sm flex items-center">
                     <span>
-                      e/
+                      n/
                       {(post.userHandle || "anonymous")
                         .toLowerCase()
                         .replace(/\s+/g, "")}
@@ -541,7 +648,7 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
                   </p>
                 </div>
               </div>
-              <h1 className="text-2xl font-bold text-white mt-4 leading-tight">
+              <h1 className="sm:text-2xl text-lg font-bold px-1 text-white mt-4 leading-tight">
                 {post.title || "Research Summary"}
               </h1>
             </div>
@@ -556,13 +663,13 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           </div>
 
           {/* Content */}
-          <div className="px-6">
-            <div className="mb-6 text-[#d7dadc] text-lg leading-relaxed">
+          <div className="">
+            <div className="mb-6 sm:px-6 px-3 text-[#d7dadc] sm:text-lg text-sm leading-relaxed">
               <p className="whitespace-pre-line">{post.description}</p>
             </div>
 
             {post.imageUrl?.length > 0 && (
-              <div className="mb-8 overflow-hidden rounded-xl  bg-black">
+              <div className="sm:mb-8 mb-2 sm:px-6 px-0 overflow-hidden sm:rounded-xl bg-black">
                 <img
                   src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
                   alt="Post content"
@@ -573,11 +680,11 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
             )}
 
             {post.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2 px-2 py-1 sm:mb-8 mb-2">
                 {post.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-[#AD49E1]/10 text-[#AD49E1] px-3 py-1.5 rounded-full text-sm font-medium">
+                    className="bg-[#AD49E1]/10 text-[#AD49E1] px-3 py-1.5 rounded-full sm:text-sm text-xs font-medium">
                     #{tag}
                   </span>
                 ))}
@@ -693,6 +800,11 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
           </div>
         </div>
       </div>
+
+      {/* Hover Card - positioned at the end */}
+      {hoveredUser && (
+        <UserProfileCard user={hoveredUser} position={hoverPosition} />
+      )}
     </div>
   );
 };
