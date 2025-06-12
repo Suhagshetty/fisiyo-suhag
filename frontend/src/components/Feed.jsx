@@ -13,7 +13,7 @@ import EmptyState from "./EmptyState";
 import Post from "./Post";
 import FollowerSuggestions from "./FollowerSuggestions";
 
-// Utils
+// Util fucntions
 import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
 
 const Feed = () => {
