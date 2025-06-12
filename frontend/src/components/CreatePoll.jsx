@@ -220,7 +220,7 @@ const CreatePoll = ({
       };
 
       const response = await axios.post(
-        "http://localhost:3000/api/create-poll",
+        "http://localhost:3000/api/polls/create-poll",
         pollData
       );
 

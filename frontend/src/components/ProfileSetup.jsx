@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   Shield,
@@ -9,6 +9,9 @@ import {
   UserCheck,
   Camera,
   X,
+  Loader2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -32,6 +35,9 @@ const ProfileSetup = () => {
   const [profilePicturePreview, setProfilePicturePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [handleAvailable, setHandleAvailable] = useState(null); // null: not checked, true: available, false: taken
+  const [handleChecking, setHandleChecking] = useState(false);
+  const [handleDebounceTimer, setHandleDebounceTimer] = useState(null);
   const navigate = useNavigate();
 
   const roles = ["Student/Enthu", "Professor", "Moderator"];
@@ -54,6 +60,60 @@ const ProfileSetup = () => {
     "Immunology",
     "Data Science",
   ];
+
+  // Add this useEffect for handle checking
+  useEffect(() => {
+    return () => {
+      if (handleDebounceTimer) {
+        clearTimeout(handleDebounceTimer);
+      }
+    };
+  }, [handleDebounceTimer]);
+
+  // Add this function to check handle availability
+  const checkHandleAvailability = async (handle) => {
+    if (handle.length < 3) {
+      setHandleAvailable(null);
+      return;
+    }
+
+    setHandleChecking(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/users/check-handle?handle=${handle}`
+      );
+      setHandleAvailable(!response.data.exists);
+    } catch (error) {
+      console.error("Error checking handle:", error);
+    } finally {
+      setHandleChecking(false);
+    }
+  };
+
+  // Update the handle input onChange handler
+  const handleHandleChange = (e) => {
+    const newHandle = e.target.value
+      .replace(/[^a-zA-Z0-9_]/g, "")
+      .toLowerCase();
+    setFormData({ ...formData, handle: newHandle });
+
+    // Clear previous timer
+    if (handleDebounceTimer) {
+      clearTimeout(handleDebounceTimer);
+    }
+
+    // Set new timer for debounce
+    if (newHandle.length >= 3) {
+      setHandleChecking(true);
+      const timer = setTimeout(() => {
+        checkHandleAvailability(newHandle);
+      }, 500);
+      setHandleDebounceTimer(timer);
+    } else {
+      setHandleAvailable(null);
+      setHandleChecking(false);
+    }
+  };
 
   const handleRoleSelect = (role) => {
     setFormData({ ...formData, role });
@@ -367,7 +427,6 @@ const ProfileSetup = () => {
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 />
               </div>
-
               {/* Handle Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -381,16 +440,27 @@ const ProfileSetup = () => {
                   <input
                     type="text"
                     value={formData.handle}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        handle: e.target.value.replace(/[^a-zA-Z0-9_]/g, ""),
-                      })
-                    }
-                    className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                    onChange={handleHandleChange}
+                    className="w-full pl-8 pr-10 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                     placeholder="your_handle"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {handleChecking && (
+                      <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                    )}
+                    {!handleChecking && handleAvailable === true && (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    )}
+                    {!handleChecking && handleAvailable === false && (
+                      <XCircle className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                  {!handleChecking && handleAvailable === false && (
+                    <p className="absolute -bottom-6 left-0 text-red-500 text-sm">
+                      This handle is already taken
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -418,7 +488,6 @@ const ProfileSetup = () => {
                   ))}
                 </div>
               </div>
-
               {/* Age Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -447,18 +516,24 @@ const ProfileSetup = () => {
                 disabled={
                   !formData.name ||
                   !formData.handle ||
+                  formData.handle.length < 3 || // Require at least 3 characters
                   !formData.gender ||
-                  !formData.age
+                  !formData.age ||
+                  handleAvailable === false || // Disable if handle is taken
+                  handleChecking // Disable while checking
                 }
                 className={`group inline-flex items-center justify-center px-10 py-4 rounded-xl border transition-all duration-300
-                  ${
-                    formData.name &&
-                    formData.handle &&
-                    formData.gender &&
-                    formData.age
-                      ? "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20 cursor-pointer"
-                      : "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
-                  }`}
+      ${
+        formData.name &&
+        formData.handle &&
+        formData.handle.length >= 3 &&
+        formData.gender &&
+        formData.age &&
+        handleAvailable !== false &&
+        !handleChecking
+          ? "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20 cursor-pointer"
+          : "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
+      }`}
                 style={{
                   fontFamily: "Playfair Display, serif",
                   color: "#12261D",
@@ -467,8 +542,11 @@ const ProfileSetup = () => {
                   className={`text-lg font-medium transition-colors ${
                     formData.name &&
                     formData.handle &&
+                    formData.handle.length >= 3 &&
                     formData.gender &&
-                    formData.age
+                    formData.age &&
+                    handleAvailable !== false &&
+                    !handleChecking
                       ? "group-hover:text-[#AD49E1]"
                       : ""
                   }`}>
@@ -648,7 +726,7 @@ const ProfileSetup = () => {
           filter: brightness(1.05);
         }
         .interest-word.selected {
-          color: #AD49E1 !important;
+          color: #ad49e1 !important;
           font-weight: 700 !important;
         }
       `}</style>

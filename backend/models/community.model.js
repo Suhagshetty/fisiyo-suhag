@@ -114,6 +114,6 @@ communitySchema.index({ name: 1 }, { unique: true });
 communitySchema.index({ memberCount: -1 });
 communitySchema.index({ postCount: -1 });
 
-const Community = mongoose.model("Communitie", communitySchema);
+const Community = mongoose.model("Community", communitySchema);
 
 export default Community;

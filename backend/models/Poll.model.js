@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import Community from "./community.model.js";
 const pollSchema = new mongoose.Schema(
   {
     question: {
@@ -22,6 +22,7 @@ const pollSchema = new mongoose.Schema(
             ref: "User",
           },
         ],
+        isCorrect: Boolean,
       },
     ],
     author: {
@@ -35,66 +36,70 @@ const pollSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
+    community: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Community",
+      required: true,
+    },
     communityHandle: {
       type: String,
       required: true,
       trim: true,
       maxlength: 100,
     },
-    community: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Community",
-      required: true,
-    },
     community_dp: {
       type: String,
       required: true,
-      trim: true,
     },
-
-    // Voting logic
+    votes: [{
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      selectedOptions: {
+        type: [Number],
+        required: true
+      }
+    }],
     totalVotes: {
       type: Number,
       default: 0,
     },
-    votedUsers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    votedUsers: [{
+      type: mongoose.Schema.Types.Mixed,
+      ref: 'User'
+    }],
     allowMultipleVotes: {
       type: Boolean,
       default: false,
     },
-
-    // Poll Type: Standard or Quiz
     pollType: {
       type: String,
       enum: ["standard", "quiz"],
       default: "standard",
     },
-
-    // Quiz fields
     correctOptionIndexes: {
-      type: [Number], // Indexes of correct options
+      type: [Number],
       default: [],
+      validate: {
+        validator: function (v) {
+          return this.pollType !== "quiz" || v.length > 0;
+        },
+        message: "At least one correct option is required for quizzes",
+      },
     },
     showCorrectOption: {
       type: Boolean,
       default: false,
     },
-
-    // Results visibility
     showVotesBeforeExpire: {
       type: Boolean,
       default: true,
     },
-
-    // Expiry
     expiresAt: {
       type: Date,
-      default: () => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from creation
+      default: () => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
     },
     isActive: {
       type: Boolean,
@@ -103,16 +108,36 @@ const pollSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Indexes
-pollSchema.index({ community: 1, createdAt: -1 });
+// Virtual for time remaining
+pollSchema.virtual("timeRemaining").get(function () {
+  return Math.max(0, this.expiresAt - Date.now());
+});
 
-// Instance method to check if expired
-pollSchema.methods.hasExpired = function () {
-  return new Date() > this.expiresAt;
+// Check if poll is expired
+pollSchema.methods.isExpired = function () {
+  return Date.now() > this.expiresAt;
 };
+
+// Update isActive status before save
+pollSchema.pre("save", function (next) {
+  this.isActive = !this.isExpired();
+  next();
+});
+
+// Auto-deactivate expired polls
+pollSchema.post("find", function (docs) {
+  docs.forEach((doc) => {
+    if (doc.isExpired() && doc.isActive) {
+      doc.isActive = false;
+      doc.save();
+    }
+  });
+});
 
 const Poll = mongoose.model("Poll", pollSchema);
 export default Poll;
