@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
+import LandingPage2 from "./components/LandingPageMe";
 import Feed from "./components/Feed";
 import ProfileSetup from "./components/ProfileSetup";
 import Profile from "./components/Profile";
@@ -26,6 +27,7 @@ function App() {
       {/* Main routes - if modal is open, render the background location */}
       <Routes location={isModal ? backgroundLocation : location}>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/L2" element={<LandingPage2 />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/setup" element={<ProfileSetup />} />
         <Route path="/profile" element={<Profile />} />

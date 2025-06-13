@@ -88,24 +88,54 @@ router.get("/posts", async (req, res) => {
   }
 });
 
-// Add this new route to your router
-router.get("/posts/by-communities", async (req, res) => {
+
+router.get("/posts/by-ids", async (req, res) => {
+  // Now accessible at /api/posts/by-ids
   try {
-    // Get community IDs from query parameters
+    const postIds = req.query.ids;
+
+    if (!postIds) {
+      return res.status(400).json({ error: "Missing post IDs" });
+    }
+
+    // Convert comma-separated string to array of ObjectIds
+    const postIdArray = postIds
+      .split(",")
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    // Fetch posts where _id is in the array
+    const posts = await Post.find({
+      _id: { $in: postIdArray },
+    })
+      .sort({ createdAt: -1 })
+      .populate("author", "username")
+      .populate("community", "name");
+
+    res.status(200).json(posts);
+  } catch (err) {
+    console.error("Fetch posts by IDs error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ error: "Invalid post ID format" });
+    }
+    res.status(500).json({ error: "Failed to fetch posts" });
+  }
+});
+
+router.get("/posts/by-communities", async (req, res) => {
+  // Now accessible at /api/posts/by-communities
+  try {
     const communityIds = req.query.ids;
-    
+
     if (!communityIds) {
       return res.status(400).json({ error: "Missing community IDs" });
     }
 
-    // Convert comma-separated string to array of ObjectIds
-    const communityIdArray = communityIds.split(',').map(id => 
-      mongoose.Types.ObjectId.createFromHexString(id)
-    );
+    const communityIdArray = communityIds
+      .split(",")
+      .map((id) => new mongoose.Types.ObjectId(id));
 
-    // Fetch posts from the specified communities
     const posts = await Post.find({
-      community: { $in: communityIdArray }
+      community: { $in: communityIdArray },
     }).sort({ createdAt: -1 });
 
     res.status(200).json(posts);
@@ -114,7 +144,6 @@ router.get("/posts/by-communities", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch posts" });
   }
 });
-
 
 // Add these routes to your existing router file
 
@@ -459,7 +488,7 @@ const randomPersonaPrompt =
     const completion = await openai.chat.completions.create({
       model: "openai/gpt-4o",
       messages: [{ role: "user", content: randomPersonaPrompt }],
-      max_tokens: 900,
+      max_tokens: 200,
     });
     
 

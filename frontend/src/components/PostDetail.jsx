@@ -633,9 +633,16 @@ useEffect(() => {
                   alt="community"
                 />
                 <div>
-                  <h2 className="text-white sm:text-base text-sm font-medium">
-                    c/{post.communityHandle || "Astronomy"}
-                  </h2>
+                  <Link
+                    // key={community._id}
+                    to={`/c/${post.communityHandle}`}
+                    // state={{ user: currentUser }}
+                  >
+                    <h2 className="text-white sm:text-base text-sm font-medium">
+                      c/{post.communityHandle || "Astronomy"}
+                    </h2>
+                  </Link>
+
                   <p className="text-[#818384] sm:text-sm text-sm flex items-center">
                     <span>
                       n/
@@ -692,51 +699,10 @@ useEffect(() => {
             )}
 
             {/* Engagement Bar */}
-            <div className="flex items-center gap-4 text-[#818384] border-t border-[#1E1E1E] pt-5">
-              <div className="flex items-center bg-[#161617] rounded-full">
-                <button
-                  onClick={() => handleVote("up")}
-                  className={`p-2 rounded-l-full transition-colors ${
-                    voted === "up"
-                      ? "text-[#AD49E1] bg-[#AD49E1]/10"
-                      : "hover:bg-[#AD49E1]/10 hover:text-[#AD49E1]"
-                  }`}>
-                  <ChevronUp size={20} />
-                </button>
-                <span
-                  className={`px-2 text-sm font-bold ${
-                    voted === "up"
-                      ? "text-[#AD49E1]"
-                      : voted === "down"
-                      ? "text-[#7193ff]"
-                      : "text-[#d7dadc]"
-                  }`}>
-                  {voteCount}
-                </span>
-                <button
-                  onClick={() => handleVote("down")}
-                  className={`p-2 rounded-r-full transition-colors ${
-                    voted === "down"
-                      ? "text-[#7193ff] bg-[#7193ff]/10"
-                      : "hover:bg-[#7193ff]/10 hover:text-[#7193ff]"
-                  }`}>
-                  <ChevronDown size={20} />
-                </button>
-              </div>
-
+            <div className="flex items-center gap-4 text-[#818384] border-t px-10 border-[#1E1E1E] p-5">
               <button className="flex items-center gap-1.5 hover:text-white transition-colors">
                 <MessageSquare size={18} />
                 <span className="text-sm">{comments.length} Comments</span>
-              </button>
-
-              <button className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <Share size={18} />
-                <span className="text-sm">Share</span>
-              </button>
-
-              <button className="flex items-center gap-1.5 hover:text-white transition-colors ml-auto">
-                <Bookmark size={18} />
-                <span className="text-sm">Save</span>
               </button>
             </div>
           </div>

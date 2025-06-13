@@ -10,10 +10,10 @@ import useFeedData from "../hooks/useFeedData";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import EmptyState from "./EmptyState";
-import Post from "./Post";
+import PostCard from "./Post";
 import FollowerSuggestions from "./FollowerSuggestions";
 
-// Util fucntions
+// Util functions
 import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
 
 const Feed = () => {
@@ -86,7 +86,7 @@ const Feed = () => {
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
           <div className="flex h-full justify-around">
             {/* Main Feed */}
-            <div className="flex-1 w-[58%] overflow-y-auto sm:p-2">
+            <div className="flex-1 w-[58%] overflow-y-auto p-4">
               {loading && (
                 <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent" />
@@ -94,7 +94,7 @@ const Feed = () => {
               )}
 
               {error && (
-                <div className="bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-2xl p-6 text-red-400 text-center mb-8 backdrop-blur-sm mx-4">
+                <div className="bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-2xl p-6 text-red-400 text-center mb-8 backdrop-blur-sm">
                   {error}
                 </div>
               )}
@@ -104,7 +104,7 @@ const Feed = () => {
               )}
 
               {!loading && posts.length > 0 && (
-                <div className="space-y-0 sm:rounded-2xl overflow-hidden sm:border border-[#222]">
+                <div className="space-y-0 border rounded-2xl overflow-hidden border-[#222]">
                   {posts.map((post) => {
                     const isExpanded = expandedPosts.has(post._id);
                     const userVote = votedPosts.get(post._id);
@@ -112,7 +112,7 @@ const Feed = () => {
                     const downvoteCount = downvoteCounts.get(post._id) || 0;
 
                     return (
-                      <Post
+                      <PostCard
                         key={post._id}
                         post={post}
                         currentUser={currentUser}
@@ -136,7 +136,7 @@ const Feed = () => {
             </div>
 
             {/* Right sidebar */}
-            <div className="w-[33%] bg-[#0a0a0a] p-2 overflow-y-auto hidden sm:block scrollbar scrollbar-thumb-[#AD49E1]/70 scrollbar-track-[#1a1a1a] scrollbar-rounded">
+            <div className="w-[36%] bg-[#0a0a0a] p-2 overflow-y-auto hidden sm:block scrollbar scrollbar-thumb-[#AD49E1]/70 scrollbar-track-[#1a1a1a] scrollbar-rounded">
               <div className="rounded-3xl h-full">
                 <FollowerSuggestions currentUser={currentUser} />
               </div>
