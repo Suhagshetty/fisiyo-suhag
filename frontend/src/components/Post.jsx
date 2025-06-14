@@ -92,11 +92,11 @@ const PostCard = ({
   return (
     <article className="bg-[#111111]  overflow-hidden shadow-lg hover:shadow-xl border-b  border-[#222] transition-all duration-300 ">
       {/* Post Header */}
-      <div className="flex items-center justify-between p-2 pb-1">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between sm:p-2 pt-2 sm:pb-1">
+        <div className="flex items-center sm:gap-3 gap-1">
           <Link to={`/c/${post.communityHandle}`} state={{ user: currentUser }}>
             <img
-              className="w-12 h-12 object-cover object-center rounded-full"
+              className="sm:w-12 h-10 sm:h-12 w-10 object-cover object-center rounded-full"
               src={post.community_dp}
               alt="community"
             />

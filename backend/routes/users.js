@@ -189,4 +189,41 @@ router.get("/saved-posts/:userId", async (req, res) => {
   }
 });
 
+
+
+router.post('/search-users', async (req, res) => {
+  try {
+    const { searchTerm, excludeId } = req.body;
+    const limit = parseInt(req.body.limit) || 5;
+
+    // Validation
+    if (!searchTerm || searchTerm.trim() === '') {
+      return res.status(400).json({ message: 'Search term required' });
+    }
+
+    const query = {
+      $or: [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { handle: { $regex: searchTerm, $options: 'i' } }
+      ]
+    };
+
+    if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
+      query._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+    }
+
+    const results = await User.find(query)
+      .select('_id name handle profilePicture')
+      .limit(limit);
+
+    res.json(results);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+ 
 export default router;
+
+
+    

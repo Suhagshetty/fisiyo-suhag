@@ -151,6 +151,7 @@ const LandingPage = () => {
       <div className="stars"></div>
       <div className="stars2"></div>
       <div className="stars3"></div>
+      <div className="stars4"></div>
 
       <div className="absolute top-7 left-7 text-6xl text-white font-[Orbitron]">
         FISIYO

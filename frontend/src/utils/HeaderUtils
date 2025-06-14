@@ -1,0 +1,46 @@
+// src/utils/HeaderUtils.js
+
+export const fetchSuggestions = async ({ searchTerm, currentUser, setSuggestions, setIsLoading, setShowSuggestions, setSelectedIndex }) => {
+  try {
+    const response = await fetch("http://localhost:3000/api/users/search-users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        searchTerm: searchTerm.trim(),
+        excludeId: currentUser?._id,
+        limit: 5,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Search failed");
+
+    const data = await response.json();
+    setSuggestions(data);
+    setShowSuggestions(true);
+    setSelectedIndex(-1);
+  } catch (error) {
+    console.error("Search error:", error);
+    setSuggestions([]);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+export const handleKeyDown = (e, suggestions, selectedIndex, setSelectedIndex, handleSuggestionClick) => {
+  if (!suggestions.length) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    setSelectedIndex((prev) => (prev + 1) % suggestions.length);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    setSelectedIndex((prev) =>
+      prev === -1 || prev === 0 ? suggestions.length - 1 : prev - 1
+    );
+  } else if (e.key === "Enter") {
+    if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[selectedIndex]);
+    }
+  }
+};

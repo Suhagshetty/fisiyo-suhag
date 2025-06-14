@@ -86,7 +86,7 @@ const Feed = () => {
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
           <div className="flex h-full justify-around">
             {/* Main Feed */}
-            <div className="flex-1 w-[58%] overflow-y-auto p-4">
+            <div className="flex-1 w-[58%] overflow-y-auto sm:p-2 ">
               {loading && (
                 <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent" />
@@ -104,7 +104,7 @@ const Feed = () => {
               )}
 
               {!loading && posts.length > 0 && (
-                <div className="space-y-0 border rounded-2xl overflow-hidden border-[#222]">
+                <div className="space-y-0 sm:border sm:rounded-2xl overflow-hidden border-[#222]">
                   {posts.map((post) => {
                     const isExpanded = expandedPosts.has(post._id);
                     const userVote = votedPosts.get(post._id);
@@ -136,7 +136,7 @@ const Feed = () => {
             </div>
 
             {/* Right sidebar */}
-            <div className="w-[36%] bg-[#0a0a0a] p-2 overflow-y-auto hidden sm:block scrollbar scrollbar-thumb-[#AD49E1]/70 scrollbar-track-[#1a1a1a] scrollbar-rounded">
+            <div className="w-[30%] bg-[#0a0a0a] p-2 overflow-y-auto hidden sm:block scrollbar scrollbar-thumb-[#AD49E1]/70 scrollbar-track-[#1a1a1a] scrollbar-rounded">
               <div className="rounded-3xl h-full">
                 <FollowerSuggestions currentUser={currentUser} />
               </div>
