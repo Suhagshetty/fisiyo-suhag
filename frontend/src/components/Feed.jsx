@@ -12,6 +12,7 @@ import Header from "./Header";
 import EmptyState from "./EmptyState";
 import PostCard from "./Post";
 import FollowerSuggestions from "./FollowerSuggestions";
+import MobileNavBar from "./MobileNavBar";
 
 // Util functions
 import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
@@ -143,6 +144,7 @@ const Feed = () => {
             </div>
           </div>
         </main>
+        <MobileNavBar navigate={navigate} currentUser={currentUser} />
       </div>
     </div>
   );

@@ -90,7 +90,7 @@ const PostCard = ({
   };
 
   return (
-    <article className="bg-[#111111]  overflow-hidden shadow-lg hover:shadow-xl border-b  border-[#222] transition-all duration-300 ">
+    <article className="bg-[#111111]  overflow-hidden shadow-lg hover:shadow-xl border-b mb-5.5  border-[#222] transition-all duration-300 ">
       {/* Post Header */}
       <div className="flex items-center justify-between sm:p-2 pt-2 sm:pb-1">
         <div className="flex items-center sm:gap-3 gap-1">
@@ -238,7 +238,7 @@ const PostCard = ({
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
               <Share size={16} />
-              <span className="hidden sm:inline">Share</span>
+              {/* <span className="hidden sm:inline">Share</span> */}
             </button>
 
             <button
@@ -253,7 +253,7 @@ const PostCard = ({
                 fill={savedPosts.has(post._id) ? "#AD49E1" : "none"}
               />
               <span className="hidden sm:inline">
-                {savedPosts.has(post._id) ? "Saved" : "Save"}
+                {/* {savedPosts.has(post._id) ? "Saved" : "Save"} */}
               </span>
             </button>
 
