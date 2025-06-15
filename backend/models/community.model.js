@@ -42,10 +42,6 @@ const communitySchema = new Schema(
         default: [],
       },
     ],
-    isPrivate: {
-      type: Boolean,
-      default: false,
-    },
     postCount: {
       type: Number,
       default: 0,
@@ -85,11 +81,6 @@ const communitySchema = new Schema(
     lastActivityAt: {
       type: Date,
       default: Date.now,
-    },
-    defaultSort: {
-      type: String,
-      enum: ["hot", "new", "top"],
-      default: "hot",
     },
     colorPrimary: {
       type: String,

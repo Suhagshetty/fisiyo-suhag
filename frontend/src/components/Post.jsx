@@ -90,7 +90,7 @@ const PostCard = ({
   };
 
   return (
-    <article className="bg-[#111111]  overflow-hidden shadow-lg hover:shadow-xl border-b mb-5.5  border-[#222] transition-all duration-300 ">
+    <article className="bg-[#111111]  overflow-hidden shadow-lg hover:shadow-xl border-b   border-[#222] transition-all duration-300 ">
       {/* Post Header */}
       <div className="flex items-center justify-between sm:p-2 pt-2 sm:pb-1">
         <div className="flex items-center sm:gap-3 gap-1">

@@ -326,7 +326,7 @@ useEffect(() => {
                 state={{ user: user, handle: comment.handle }}
                 className="">
                 <img
-                  className="w-8 h-8 rounded-full"
+                  className="w-8 h-8 rounded-full object-cover"
                   src={
                     comment.userDp
                       ? `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${comment.userDp}`

@@ -179,7 +179,7 @@ const CommunitySetup = () => {
 
         {/* Settings */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
+          {/* <div>
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -190,7 +190,7 @@ const CommunitySetup = () => {
               />
               <span>Private Community</span>
             </label>
-          </div>
+          </div> */}
 
           <div>
             <label className="flex items-center space-x-2">
@@ -205,7 +205,7 @@ const CommunitySetup = () => {
             </label>
           </div>
 
-          <div>
+          {/* <div>
             <label className="block mb-2 font-medium">Default Sort</label>
             <select
               name="defaultSort"
@@ -216,7 +216,7 @@ const CommunitySetup = () => {
               <option value="new">New</option>
               <option value="top">Top</option>
             </select>
-          </div>
+          </div> */}
         </div>
 
         {/* Colors */}
