@@ -96,7 +96,7 @@ const PostCard = ({
         <div className="flex items-center sm:gap-3 gap-1">
           <Link to={`/c/${post.communityHandle}`} state={{ user: currentUser }}>
             <img
-              className="sm:w-12 h-10 sm:h-12 w-10 object-cover object-center rounded-full"
+              className="sm:w-12 h-10 sm:h-12 w-10 object-cover object-center"
               src={post.community_dp}
               alt="community"
             />

@@ -62,69 +62,57 @@ router.post("/create-poll", async (req, res) => {
   }
 });
 
+
+// Vote on a poll
 router.post("/:pollId/vote", async (req, res) => {
   try {
-    const { selectedOptions, userId } = req.body;
-    const pollId = req.params.pollId;
+    const { pollId } = req.params;
+    const { userId, selectedOption } = req.body;
 
-    // Validate inputs
-    if (!Array.isArray(selectedOptions) || selectedOptions.length === 0) {
-      return res.status(400).json({ message: "Invalid selectedOptions" });
-    }
-
-    if (!pollId || !mongoose.Types.ObjectId.isValid(pollId)) {
-      return res.status(400).json({ message: "Invalid poll ID" });
+    // Validate input
+    if (!userId || selectedOption === undefined) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     const poll = await Poll.findById(pollId);
-    if (!poll) return res.status(404).json({ message: "Poll not found" });
+    if (!poll) {
+      return res.status(404).json({ error: "Poll not found" });
+    }
 
-    // Convert userId to string for comparison
-    const userIdStr = userId.toString();
+    // Check if poll is active
+    if (!poll.isActive) {
+      return res.status(400).json({ error: "Poll has ended" });
+    }
 
-    // Check if user already voted (handles both ObjectId and string)
-    const alreadyVoted = poll.votedUsers.some(
-      (id) => id.toString() === userIdStr
+    // Check if user has already voted
+    if (poll.votedUsers.includes(userId) && !poll.allowMultipleVotes) {
+      return res.status(400).json({ error: "User has already voted" });
+    }
+
+    // Update the poll
+    const updatedPoll = await Poll.findByIdAndUpdate(
+      pollId,
+      {
+        $addToSet: { votedUsers: userId },
+        $push: { 
+          "votes": { 
+            userId, 
+            selectedOptions: [selectedOption] 
+          } 
+        },
+        $inc: { totalVotes: 1 },
+        $inc: { [`options.${selectedOption}.votes`]: 1 }
+      },
+      { new: true }
     );
 
-    if (alreadyVoted) {
-      return res.status(400).json({ message: "Already voted" });
-    }
-
-    // Check expiration
-    if (new Date() > new Date(poll.expiresAt)) {
-      return res.status(400).json({ message: "Poll expired" });
-    }
-    // Inside vote endpoint
-    if (!userId || typeof userId !== "string") {
-      return res.status(400).json({
-        message: "Valid user ID is required",
-        received: userId,
-      });
-    }
-
-    // Update vote counts
-    selectedOptions.forEach((optionIndex) => {
-      if (optionIndex < poll.options.length) {
-        poll.options[optionIndex].voteCount += 1;
-      }
-    });
-
-    // Add user to voted list (store as ObjectId if possible)
-    let userIdToStore = userId;
-    if (mongoose.Types.ObjectId.isValid(userId)) {
-      userIdToStore = new mongoose.Types.ObjectId(userId);
-    }
-
-    poll.votedUsers.push(userIdToStore);
-    poll.totalVotes += 1;
-
-    await poll.save();
-    res.status(200).json(poll);
+    res.json(updatedPoll);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error voting:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
+ 
 
 router.get("/votes/:userId", async (req, res) => {
   try {
@@ -158,13 +146,26 @@ router.get("/votes/:userId", async (req, res) => {
   }
 });
 
+// router.get("/", async (req, res) => {
+//   try {
+//     const polls = await Poll.find().sort({ createdAt: -1 });
+//     res.status(200).json(polls);
+//   } catch (err) {
+//     console.error("Fetch posts error:", err);
+//     res.status(500).json({ error: "Failed to fetch posts" });
+//   }
+// });
+
 router.get("/", async (req, res) => {
   try {
     const polls = await Poll.find().sort({ createdAt: -1 });
     res.status(200).json(polls);
   } catch (err) {
-    console.error("Fetch posts error:", err);
-    res.status(500).json({ error: "Failed to fetch posts" });
+    console.error("Fetch polls error:", err);
+    res.status(500).json({ error: "Failed to fetch polls" });
   }
 });
+
+
+
 export default router;

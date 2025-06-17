@@ -11,6 +11,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import EmptyState from "./EmptyState";
 import PostCard from "./Post";
+import Poll from "./Poll";
 import FollowerSuggestions from "./FollowerSuggestions";
 import MobileNavBar from "./MobileNavBar";
 
@@ -31,6 +32,7 @@ const Feed = () => {
     expandedPosts,
     votedPosts,
     upvoteCounts,
+    polls,
     savedPosts,
     downvoteCounts,
     communities,
@@ -44,6 +46,7 @@ const Feed = () => {
 
   // Handlers
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+console.log(polls);
 
   const handleCreatePost = () => {
     navigate("/compose/post", {
@@ -100,12 +103,24 @@ const Feed = () => {
                 </div>
               )}
 
-              {!loading && posts.length === 0 && (
+              {/* {!loading && posts.length === 0 && (
                 <EmptyState onCreatePost={handleCreatePost} />
-              )}
+              )} */}
 
               {!loading && posts.length > 0 && (
                 <div className="space-y-0 sm:border sm:rounded-2xl overflow-hidden border-[#222]">
+                  {polls.map((poll) => (
+                    <Poll
+                      key={poll.id}
+                      poll={poll}
+                      currentUser={currentUser}
+                      formatDate={formatDate}
+                      truncateText={truncateText}
+                      formatVoteCount={formatVoteCount}
+                      savedPosts={savedPosts}
+                      handleSavePost={handleSavePost}
+                    />
+                  ))}
                   {posts.map((post) => {
                     const isExpanded = expandedPosts.has(post._id);
                     const userVote = votedPosts.get(post._id);

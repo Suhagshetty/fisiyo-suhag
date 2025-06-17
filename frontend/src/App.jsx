@@ -14,6 +14,7 @@ import CommunityPage from "./components/CommunityPage";
 import CreatePoll from "./components/CreatePoll";
 import CreateDiscussion from "./components/CreateDiscussion";
 import ProfilePage from "./components/ProfilePage";
+import PollDetail from "./components/PollDetail";
 
 function App() {
   const location = useLocation();
@@ -36,8 +37,8 @@ function App() {
         <Route path="/community-setup" element={<CommunityCreator />} />
         <Route path="/c/:name" element={<CommunityPage />} />
         <Route path="/n/:name" element={<ProfilePage />} />
-
-        <Route path="/post/:postId" element={<PostDetail />} />
+        {/* <Route path="/poll/:pollId" element={<PollDetail />} />
+        <Route path="/post/:postId" element={<PostDetail />} /> */}
         <Route path="/compose/post" element={<CreatePost isModal={false} />} />
         {/* <Route path="/compose/poll" element={<CreatePoll isModal={false} />} /> */}
       </Routes>
@@ -76,6 +77,15 @@ function App() {
             path="/post/:postId"
             element={
               <PostDetail
+                isModal={true}
+                backgroundLocation={backgroundLocation}
+              />
+            }
+          />
+          <Route
+            path="/poll/:pollId"
+            element={
+              <PollDetail
                 isModal={true}
                 backgroundLocation={backgroundLocation}
               />

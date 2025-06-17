@@ -8,6 +8,7 @@ export default function useFeedData(currentUser, user) {
   const [downvoteCounts, setDownvoteCounts] = useState(new Map());
   const [communities, setCommunities] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -112,6 +113,23 @@ export default function useFeedData(currentUser, user) {
     };
 
     fetchPosts();
+  }, []);
+
+  useEffect(() => {
+    const fetchPolls = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/polls");
+        const data = await response.json();
+        setPolls(data);
+      } catch (err) {
+        console.error("Error fetching polls:", err);
+        setError("Failed to load polls.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPolls();
   }, []);
 
   const handleSavePost = async (postId) => {
@@ -263,6 +281,7 @@ export default function useFeedData(currentUser, user) {
     downvoteCounts,
     communities,
     posts,
+    polls,
     loading,
     error,
     togglePostExpansion,

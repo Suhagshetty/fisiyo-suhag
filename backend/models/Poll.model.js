@@ -95,7 +95,7 @@ const pollSchema = new mongoose.Schema(
     },
     showVotesBeforeExpire: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     expiresAt: {
       type: Date,

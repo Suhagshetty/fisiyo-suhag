@@ -1,203 +1,242 @@
-import { useState, useEffect } from "react";
-import { Clock } from "lucide-react";
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { MessageSquare, Share, Bookmark, MoreHorizontal } from "lucide-react";
 
 const Poll = ({
   poll,
   currentUser,
-  handleVote,
-  existingVote,
-  pollVoteCounts,
+  formatDate,
+  truncateText,
+  formatVoteCount,
+  handleSavePost,
+  savedPosts,
 }) => {
-  // Check if user has already voted
-  const [selectedOptions, setSelectedOptions] = useState(existingVote);
-  const [isExpired, setIsExpired] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(
-    new Date(poll.expiresAt) - new Date()
+  const location = useLocation();
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [localOptions, setLocalOptions] = useState(poll.options);
+  const [localTotalVotes, setLocalTotalVotes] = useState(poll.totalVotes);
+  const [error, setError] = useState(null);
+
+  const now = new Date();
+  const expiration = new Date(poll.expiresAt);
+  const hasExpired = expiration < now;
+  const currentUserHasVoted = poll.votedUsers.includes(currentUser?._id);
+  console.log(
+    " hasExpired    ",
+    hasExpired,
+    "poll.showVotesBeforeExpire",
+    poll.showVotesBeforeExpir,
+    " hasVoted",
+    hasVoted,
+    "currentUserHasVoted",
+    currentUserHasVoted
   );
+  
 
-  // Derive hasVoted from existingVote prop
-  const hasVoted = existingVote.length > 0;
+  // Calculate time remaining
+  const timeRemaining = hasExpired
+    ? "Ended"
+    : `${Math.ceil((expiration - now) / (1000 * 60 * 60))}h remaining`;
 
-  const formatTimeRemaining = (ms) => {
-    const minutes = Math.floor(ms / 60000);
-    const hours = Math.floor(ms / 3600000);
-
-    if (hours > 24) return `${Math.floor(hours / 24)}d`;
-    if (hours > 0) return `${hours}h`;
-    return `${minutes}m`;
+  // Calculate percentages for each option
+  const calculatePercentage = (votes) => {
+    return localTotalVotes > 0
+      ? Math.round((votes / localTotalVotes) * 100)
+      : 0;
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "now";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "now";
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString();
-  };
-
-  // Handle expiration
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      setIsExpired(true);
+  // Handle voting
+  const handlePollVote = async (optionIndex) => {
+    if (hasVoted || currentUserHasVoted || !currentUser) {
+      console.log("has voted");
+      
       return;
     }
+    setError(null);
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1000) {
-          clearInterval(timer);
-          setIsExpired(true);
-          return 0;
+    try {
+      // Optimistic UI update
+      console.log("voted");
+      
+      const originalOptions = [...localOptions];
+      const originalTotalVotes = localTotalVotes;
+
+      setSelectedOption(optionIndex);
+      setHasVoted(true);
+
+      const updatedOptions = [...localOptions];
+      updatedOptions[optionIndex].votes += 1;
+
+      setLocalOptions(updatedOptions);
+      setLocalTotalVotes(localTotalVotes + 1);
+
+      // API call to submit vote
+      const response = await fetch(
+        `http://localhost:3000/api/polls/${poll._id}/vote`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: currentUser._id,
+            selectedOption: optionIndex,
+          }),
         }
-        return prev - 1000;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Handle expiration
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      setIsExpired(true);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1000) {
-          clearInterval(timer);
-          setIsExpired(true);
-          return 0;
-        }
-        return prev - 1000;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Format time function remains the same...
-
-  const handleOptionClick = (index) => {
-    if (hasVoted || isExpired) return;
-
-    if (poll.allowMultipleVotes) {
-      setSelectedOptions((prev) =>
-        prev.includes(index)
-          ? prev.filter((i) => i !== index)
-          : [...prev, index]
       );
-    } else {
-      setSelectedOptions([index]);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Voting failed");
+      }
+
+      const updatedPoll = await response.json();
+      setLocalOptions(updatedPoll.options);
+      setLocalTotalVotes(updatedPoll.totalVotes);
+    } catch (err) {
+      console.error("Voting error:", err);
+      setError(err.message);
+
+      // Revert optimistic update
+      setSelectedOption(null);
+      setHasVoted(false);
+      setLocalOptions(originalOptions);
+      setLocalTotalVotes(originalTotalVotes);
     }
   };
 
-  const submitVote = () => {
-    if (selectedOptions.length === 0) return;
-    handleVote(poll._id, selectedOptions);
-  };
-
-  // Get vote counts from parent
-  const voteCounts = pollVoteCounts.get(poll._id) || {
-    totalVotes: poll.totalVotes,
-    optionVotes: poll.options.map((opt) => opt.voteCount),
-  };
+  // Determine if we should show results
+  const showResults =
+    hasExpired || poll.showVotesBeforeExpire || hasVoted || currentUserHasVoted;
 
   return (
-    <article className="bg-[#111111] border-b border-[#222] transition-all duration-500 shadow-2xl hover:shadow-3xl">
-      <div className="pt-3 py-2">
-        {/* ... existing header code ... */}
-        <div className="flex items-center justify-between sm:px-6 px-2 mb-2">
-          <div className="flex items-center gap-3">
+    <article className="bg-[#111111] overflow-hidden shadow-lg hover:shadow-xl border-b border-[#222] transition-all duration-300">
+      {/* Poll Header */}
+      <div className="flex items-center justify-between sm:p-2 pt-2 sm:pb-1">
+        <div className="flex items-center sm:gap-3 gap-1">
+          <Link to={`/c/${poll.communityHandle}`} state={{ user: currentUser }}>
             <img
+              className="sm:w-12 h-10 sm:h-12 w-10 object-cover object-center  "
               src={poll.community_dp}
-              alt="Community"
-              className="w-10 h-10 object-cover object-center"
+              alt="community"
             />
-            <div>
-              <h2 className="text-white font-medium text-sm">
-                c/{poll.communityHandle}
+          </Link>
+          <div>
+            <Link
+              to={`/c/${poll.communityHandle}`}
+              state={{ user: currentUser }}>
+              <h2 className="text-white font-medium text-sm hover:text-[#AD49E1] transition-colors">
+                c/{poll.communityHandle || "Astronomy"}
               </h2>
-              <p className="text-[#818384] text-xs">
-                n/{poll.userHandle} • {formatDate(poll.createdAt)} ago
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-[#818384] text-xs">
-            <Clock size={14} />
-            {isExpired
-              ? "Poll ended"
-              : `${formatTimeRemaining(timeLeft)} remaining`}
+            </Link>
+            <p className="text-[#818384] text-xs flex items-center">
+              <span>
+                n/
+                {(poll.userHandle || "anonymous")
+                  .toLowerCase()
+                  .replace(/\s+/g, "")}
+              </span>
+              <span className="mx-1.5">•</span>
+              {formatDate(poll.createdAt)} ago
+            </p>
           </div>
         </div>
-        {/* Poll Question */}
-        <div className="sm:px-6 px-2 mb-4">
-          <h3 className="text-white text-lg font-semibold mb-2">
-            {poll.question}
-          </h3>
+        <button className="text-[#a0a2a4] hover:text-white p-2 rounded-full hover:bg-[#1f1f1f] transition-colors duration-200">
+          <MoreHorizontal size={16} />
+        </button>
+      </div>
 
-          {poll.options.map((option, index) => {
-            const isSelected = selectedOptions.includes(index);
-            const votePercentage =
-              voteCounts.totalVotes > 0
-                ? (voteCounts.optionVotes[index] / voteCounts.totalVotes) * 100
-                : 0;
+      {/* Poll Question */}
+      <div className="p-4 pt-0">
+        <h2 className="text-white font-bold text-lg leading-tight mb-2">
+          {poll.question || "Poll Question"}
+        </h2>
+        <p className="text-[#818384] text-xs">
+          {localTotalVotes} votes • {timeRemaining}
+        </p>
+      </div>
 
-            return (
-              <div
-                key={index}
-                onClick={() => handleOptionClick(index)}
-                className={`relative cursor-pointer transition-all duration-200 border border-[#333] rounded-md px-4 py-3 mb-2 ${
-                  isSelected ? "bg-[#222] border-[#AD49E1]" : "bg-[#1a1a1a]"
-                }`}>
-                <p className="text-[#d7dadc] text-sm font-medium">
-                  {option.text}
-                </p>
+      {/* Poll Options */}
+      <div className="px-4 pb-4 space-y-2">
+        {localOptions.map((option, index) => {
+          const percentage = showResults
+            ? calculatePercentage(option.votes || 0)
+            : 0;
 
-                {(hasVoted || poll.showVotesBeforeExpire) && (
-                  <>
-                    <div className="mt-1 text-xs text-[#818384] flex justify-between">
-                      <span>{voteCounts.optionVotes[index]} votes</span>
-                      <span>{votePercentage.toFixed(1)}%</span>
-                    </div>
-                    <div
-                      className="absolute left-0 top-0 h-full rounded-md bg-[#AD49E1] opacity-10"
-                      style={{ width: `${votePercentage}%` }}
-                    />
-                  </>
+          const isSelected = selectedOption === index;
+          const userVotedThisOption =
+            isSelected ||
+            (currentUserHasVoted &&
+              poll.votes.some(
+                (vote) =>
+                  vote.userId === currentUser?._id &&
+                  vote.selectedOptions.includes(index)
+              ));
+          return (
+            <button
+              key={index}
+              className={`w-full text-left rounded-lg overflow-hidden transition-all duration-300 ${
+                showResults ? "bg-[#1a1a1a]" : "bg-[#1a1a1a] hover:bg-[#222]"
+              } ${userVotedThisOption ? "ring-2 ring-[#AD49E1]" : ""}`}
+              onClick={() => handlePollVote(index)}
+              disabled={showResults || !currentUser}
+              >
+              <div className="flex justify-between px-3 py-2.5">
+                <span className="text-[#d7dadc] text-sm">{option.text}</span>
+
+                {showResults && (
+                  <span className="text-[#818384] text-sm">{percentage}%</span>
                 )}
               </div>
-            );
-          })}
 
-          {!hasVoted && !isExpired && (
-            <button
-              onClick={submitVote}
-              disabled={selectedOptions.length === 0}
-              className={`mt-4 px-4 py-2 rounded-md text-white font-medium text-sm transition ${
-                selectedOptions.length === 0
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-[#AD49E1] hover:bg-[#9a3dd2]"
-              }`}>
-              Submit Vote
+              {showResults && (
+                <div className="h-1.5 bg-[#333] w-full">
+                  <div
+                    className="h-full bg-[#AD49E1] transition-all duration-700"
+                    style={{ width: `${percentage}%` }}></div>
+                </div>
+              )}
             </button>
-          )}
+          );
+        })}
+      </div>
 
-          {(hasVoted || isExpired) && (
-            <p className="text-[#818384] text-xs mt-4">
-              {voteCounts.totalVotes} total vote
-              {voteCounts.totalVotes !== 1 && "s"}
-            </p>
-          )}
+      {/* Action Bar */}
+      <div className="p-4 pt-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              to={`/poll/${poll.id}`}
+              state={{
+                poll,
+                user: currentUser,
+                backgroundLocation: location,
+              }}
+              className="flex items-center gap-2 text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm font-medium">
+              <MessageSquare size={16} />
+              <span>{poll.comments?.length || 0}</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
+              <Share size={16} />
+            </button>
+
+            <button
+              onClick={() => handleSavePost(poll.id)}
+              className={`flex items-center gap-2 hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm ${
+                savedPosts.has(poll.id)
+                  ? "text-[#AD49E1] hover:text-[#AD49E1]"
+                  : "text-[#818384] hover:text-white"
+              }`}>
+              <Bookmark
+                size={16}
+                fill={savedPosts.has(poll.id) ? "#AD49E1" : "none"}
+              />
+            </button>
+          </div>
         </div>
       </div>
     </article>

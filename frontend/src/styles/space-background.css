@@ -5,14 +5,17 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, 
-    #000000 0%, 
-    #1a0033 25%, 
-    #330066 50%, 
-    #4d0080 75%, 
-    #000000 100%);
+  background: linear-gradient(135deg,
+    #000000 0%,       /* pure black */
+    #03030d 20%,      /* near black blue */
+    #0a0a1a 40%,      /* deep space blue */
+    #0f1b2e 60%,      /* dark navy/space */
+    #07111f 80%,      /* almost black again */
+    #000000 100%      /* pure black */
+  );
   z-index: -1;
 }
+
 
 .stars, .stars2, .stars3 {
   position: fixed;
