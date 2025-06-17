@@ -80,8 +80,6 @@ router.get("/handle/:handle", async (req, res) => {
 });
 
 // Add to users.route.js
-
-// Get user suggestions
 router.post("/suggestions", async (req, res) => {
   try {
     const { excludeId, limit = 10 } = req.body;
@@ -91,8 +89,18 @@ router.post("/suggestions", async (req, res) => {
       return res.status(400).json({ message: "Invalid excludeId" });
     }
 
+    // Fetch current user's following list
+    const currentUser = await User.findById(excludeId).select("followingUsers");
+    const followingIds = currentUser.followingUsers.map((id) => id.toString());
+
+    // Create exclusion list (current user + users they already follow)
+    const excludeIds = [
+      new mongoose.Types.ObjectId(excludeId),
+      ...followingIds.map((id) => new mongoose.Types.ObjectId(id)),
+    ];
+
     const pipeline = [
-      { $match: { _id: { $ne: new mongoose.Types.ObjectId(excludeId) } } },
+      { $match: { _id: { $nin: excludeIds } } },
       { $sample: { size: parseInt(limit) || 10 } },
       { $project: { _id: 1, name: 1, handle: 1, profilePicture: 1 } },
     ];
@@ -220,6 +228,60 @@ router.post('/search-users', async (req, res) => {
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Follow a user
+router.post('/follow', async (req, res) => {
+  try {
+    const { followerId, followeeId } = req.body;
+
+    // Update both users
+    const follower = await User.findByIdAndUpdate(
+      followerId,
+      { $addToSet: { followingUsers: followeeId } },
+      { new: true }
+    );
+
+    const followee = await User.findByIdAndUpdate(
+      followeeId,
+      { 
+        $addToSet: { followers: followerId },
+        $inc: { followersCount: 1 }
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ success: true, follower, followee });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Unfollow a user
+router.post('/unfollow', async (req, res) => {
+  try {
+    const { followerId, followeeId } = req.body;
+
+    // Update both users
+    const follower = await User.findByIdAndUpdate(
+      followerId,
+      { $pull: { followingUsers: followeeId } },
+      { new: true }
+    );
+
+    const followee = await User.findByIdAndUpdate(
+      followeeId,
+      { 
+        $pull: { followers: followerId },
+        $inc: { followersCount: -1 }
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ success: true, follower, followee });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
  

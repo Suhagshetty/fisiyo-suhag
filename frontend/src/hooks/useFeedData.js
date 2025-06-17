@@ -284,6 +284,9 @@ export default function useFeedData(currentUser, user) {
     polls,
     loading,
     error,
+    setVotedPosts, // Add this
+    setUpvoteCounts, // Add this
+    setDownvoteCounts, // Add this
     togglePostExpansion,
     handleSavePost,
     handleVote,

@@ -49,5 +49,59 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+ 
+// Join community route
+router.post('/:id/join', async (req, res) => {
+  try {
+    const community = await Community.findById(req.params.id);
+    if (!community) {
+      return res.status(404).json({ error: 'Community not found' });
+    }
 
+    const userId = req.user._id;
+    
+    // Check if user is already a member
+    if (community.members.includes(userId)) {
+      return res.status(400).json({ error: 'User already a member' });
+    }
+
+    // Add user to members
+    community.members.push(userId);
+    community.memberCount += 1;
+    
+    const updatedCommunity = await community.save();
+    res.json(updatedCommunity);
+  } catch (err) {
+    
+    console.error("Join error:", err); // Log detailed error
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Leave community route
+router.post('/:id/leave', async (req, res) => {
+  try {
+    const community = await Community.findById(req.params.id);
+    if (!community) {
+      return res.status(404).json({ error: 'Community not found' });
+    }
+
+    const userId = req.user._id;
+    const index = community.members.indexOf(userId);
+    
+    if (index === -1) {
+      return res.status(400).json({ error: 'User not a member' });
+    }
+
+    // Remove user from members
+    community.members.splice(index, 1);
+    community.memberCount -= 1;
+    
+    const updatedCommunity = await community.save();
+    res.json(updatedCommunity);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+ 
 export default router;

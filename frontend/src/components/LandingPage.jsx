@@ -153,72 +153,64 @@ const LandingPage = () => {
       <div className="stars3"></div>
       <div className="stars4"></div>
 
-      <div className="absolute top-7 left-7 text-6xl text-white font-[Orbitron]">
-        FISIYO
+      <div className=" px-6 pt-10 flex  justify-between ">
+        <div>
+          <span className=" text-4xl px-18 text-white font-[Orbitron]">
+            {" "}
+            FISIYO
+          </span>
+        </div>
+
+        <div className="mb-7">
+          <button
+            onClick={handleGetStarted}
+            className=" text-2xl px-18 border rounded-xl text-white relative cursor-pointer"
+            style={{
+              backgroundColor: "transparent",
+              borderColor: "transparent",
+            }}>
+            Get Started
+          </button>
+        </div>
       </div>
-
-      {/* Hero Section */}
-      <section className="text-center px-8 py-24 max-w-6xl mx-auto relative min-h-screen flex flex-col justify-center">
-        {/* Scattered SVGs (Positioned & Responsive) */}
-        {/* <img
-          src="/images/astronaut.png"
-          className="absolute left-1/2 top-[6vh] w-[min(20vw,100px)] h-auto -translate-x-1/2 floating-2"
-        /> */}
-        {/* <div className="absolute top-[5.5vh] right-[7%] w-[min(10vw,54px)] h-[min(8vh,44px)] floating-3" />
-        <div className="absolute top-[14vh] right-[5%] w-[min(6vw,28px)] h-[min(6vw,28px)] floating-4" />
-        <div className="absolute top-[18vh] left-[43%] w-[min(6vw,29px)] h-[min(6vw,29px)] -translate-x-1/2 floating-5" /> */}
-
-        {/* Main Content */}
-        <div className="relative z-10 mt-35">
-          {/* Floating SVGs around the heading */}
-          <img
-            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/240_F_1302724318_uQ0xukXtVUpQyYGZaRyyPmZwdkQ04F9t-removebg-preview.png"
-            className="absolute right-[15%] bottom-[86%] w-[min(220px)] h-auto floating-3"
-          />
-          <img
-            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/1749392597204-image-removebg-preview%20(1).png"
-            className="absolute bottom-[40%] left-[5%] w-[min(300px)] -z-1 h-auto floating-4"
-          />
+ 
+      <section className="text-center px-8  max-w-6xl mx-auto relative min-h-screen flex flex-col justify-center"> 
+        <div className="relative z-10"> 
           {/* <img
-            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/1749394050888-image-removebg-preview%20(2).png"
-            className="absolute bottom-[10%] right-[20%] w-[min(120px)] h-auto floating-5"
+          // brain
+            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/240_F_1302724318_uQ0xukXtVUpQyYGZaRyyPmZwdkQ04F9t-removebg-preview.png"
+            className="absolute right-[0%] bottom-[86%] w-[min(220px)] h-auto floating-3"
+          /> */}
+          {/* <img
+          //telescope
+            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/1749392597204-image-removebg-preview%20(1).png"
+            className="absolute bottom-[15%] left-[-15%] w-[min(300px)] -z-1 h-auto floating-4"
+          /> */}
+
+          {/* <img
+          //atom
+            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/1749391137571-vecteezy_serene-rustic-a-visualization-of-quantum-entanglement-authentic_60335092.png"
+            className="absolute bottom-[15%] right-[-5%] w-[min(150px)] h-auto floating-5"
           /> */}
           <img
-            src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/1749391137571-vecteezy_serene-rustic-a-visualization-of-quantum-entanglement-authentic_60335092.png"
-            className="absolute bottom-[35%] right-[15%] w-[min(150px)] h-auto floating-5"
-          />
-          <img
+          //saturn
             src="https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/10145465.png"
-            className="absolute bottom-[82%] left-[10%] -z-1 w-[min(250px)] h-auto transform scale-x-[-1] rotate-[25deg] floating-5"
+            className="absolute bottom-[72%] left-[3%] -z-1 w-[min(250px)] h-auto transform scale-x-[-1] rotate-[25deg] floating-5"
           />
-
-          {/* Main Heading */}
-          <h1 className="font-serif text-4xl md:text-4xl lg:text-5xl xl:text-7xl mb-8 leading-[1.1] italic font-light tracking-wide text-white">
+ 
+          <h1 className="font-serif text-4xl  sm:text-8xl  mb-8 leading-[1.1] italic font-light tracking-wide text-white">
             Where <em className="font-medium">Curiosity</em>
             <br />
             <em className="font-medium">Fuels Collaboration!</em>
           </h1>
-
-          {/* Subtext */}
+ 
           <div className="max-w-4xl mx-auto mb-16">
-            <p className="text-lg md:text-xl lg:text-2xl leading-relaxed font-light italic tracking-wide text-gray-200">
+            <p className="text-lg md:text-xl lg:text-2xl leading-relaxed font-light tracking-wide text-gray-200">
               Think. Share. Grow. Together.
             </p>
           </div>
 
           {/* Get Started Button */}
-          <div className="mb-7">
-            <button
-              onClick={handleGetStarted}
-              className="font-serif italic text-xl px-18 py-5 border rounded-xl text-white relative hover:scale-105 transition-all duration-300 cursor-pointer"
-              style={{
-                backgroundColor: "transparent",
-                borderColor: "transparent",
-                boxShadow: "4px 4px 0 rgba(192, 132, 252, 0.3)",
-              }}>
-              Get Started
-            </button>
-          </div>
 
           {/* Scroll Down Rocket */}
           <div
@@ -421,7 +413,7 @@ const LandingPage = () => {
       </section>
 
       {/* New Synergize With Excellence Section */}
-      <section className="w-full py-20 bg-gradient-to-br from-purple-900/90 to-black/90 backdrop-blur-sm relative z-10">
+      <section className="w-full h-full py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h3 className="text-sm uppercase tracking-wider text-purple-300 mb-4">
@@ -495,11 +487,11 @@ const LandingPage = () => {
       <section className="py-20 relative z-10">
         <div className="max-w-xl mx-auto">
           <div className="flex flex-col items-center justify-center mb-8">
-            <img
+            {/* <img
               src="/logo192.png"
               alt="Fisiyo Logo"
               className="w-12 h-12 mb-4 mx-auto"
-            />
+            /> */}
             <h3 className="text-2xl font-semibold text-white">Fisiyo</h3>
           </div>
           <h4 className="text-xl font-medium mb-4 text-gray-200">

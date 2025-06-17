@@ -1,109 +1,110 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import PostCard from "./Post";
+import ProfileBanner from "./ProfileBanner";
 import axios from "axios";
-import {
-  MessageSquare,
-  Share,
-  Bookmark,
-  ChevronLeft,
-  Edit,
-  UserPlus,
-  Users,
-  FileText,
-  Star,
-  ChevronUp,
-  ChevronDown,
-  MoreHorizontal,
-} from "lucide-react";
+import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
+import useFeedData from "../hooks/useFeedData";
+import { FileText, Users } from "lucide-react";
 
 const ProfilePage = () => {
   const { handle } = useParams();
-  const { logout, user, isAuthenticated } = useAuth0();
-  const navigate = useNavigate();
+  const { user } = useAuth0();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(location.state?.user || null);
   const [userhandle, setuserhandle] = useState(location.state?.handle || null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [profileUser, setProfileUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [savedPosts, setSavedPosts] = useState([]);
-  const [loadingSaved, setLoadingSaved] = useState(true);
-  const [activeTab, setActiveTab] = useState("posts"); // 'posts' or 'saved'
   const [userPosts, setUserPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [expandedPosts, setExpandedPosts] = useState(new Set());
-  const [votedPosts, setVotedPosts] = useState(new Map());
-  const [upvoteCounts, setUpvoteCounts] = useState(new Map());
-  const [downvoteCounts, setDownvoteCounts] = useState(new Map());
 
-  // Helper functions
-  const formatDate = (dateString) => {
-    if (!dateString) return "now";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+  const {
+    expandedPosts,
+    votedPosts,
+    upvoteCounts,
+    downvoteCounts,
+    savedPosts,
+    togglePostExpansion,
+    handleSavePost,
+    handleVote,
+    setVotedPosts,
+    setUpvoteCounts,
+    setDownvoteCounts,
+  } = useFeedData(currentUser, user);
 
-    if (diffMins < 1) return "now";
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString();
-  };
-
-  const truncateText = (text, wordLimit = 20) => {
-    if (!text) return "";
-    const words = text.split(" ");
-    if (words.length <= wordLimit) return text;
-    return words.slice(0, wordLimit).join(" ") + "...";
-  };
-
-  const formatVoteCount = (count) => {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + "M";
-    } else if (count >= 1000) {
-      return (count / 1000).toFixed(1) + "K";
-    }
-    return count.toString();
-  };
-
-  const togglePostExpansion = (postId) => {
-    const newExpandedPosts = new Set(expandedPosts);
-    if (newExpandedPosts.has(postId)) {
-      newExpandedPosts.delete(postId);
-    } else {
-      newExpandedPosts.add(postId);
-    }
-    setExpandedPosts(newExpandedPosts);
-  };
-
-  // Fetch saved posts
+  // Check follow status when profileUser changes
   useEffect(() => {
-    const fetchSavedPosts = async () => {
-      if (currentUser?._id) {
-        try {
-          const response = await fetch(
-            `http://localhost:3000/api/users/saved-posts/${currentUser._id}`
-          );
-          if (response.ok) {
-            const saved = await response.json();
-            setSavedPosts(saved);
-            setLoadingSaved(false);
-          }
-        } catch (error) {
-          console.error("Error loading saved posts:", error);
-          setLoadingSaved(false);
-        }
-      }
+    const checkFollowStatus = () => {
+      if (!currentUser || !profileUser) return;
+
+      // Check if currentUser is following profileUser
+      const following = currentUser.followingUsers?.some(
+        (id) => id.toString() === profileUser._id.toString()
+      );
+      setIsFollowing(following);
     };
 
-    fetchSavedPosts();
-  }, [currentUser]);
+    checkFollowStatus();
+  }, [profileUser, currentUser]);
 
+  // Handle follow/unfollow toggle
+  const handleFollowToggle = async () => {
+    if (!currentUser || !profileUser || isFollowLoading) return;
+
+    setIsFollowLoading(true);
+    const wasFollowing = isFollowing;
+    const oldFollowersCount = profileUser.followersCount;
+
+    // Optimistic UI update
+    setIsFollowing(!wasFollowing);
+    setProfileUser((prev) => ({
+      ...prev,
+      followersCount: wasFollowing
+        ? prev.followersCount - 1
+        : prev.followersCount + 1,
+    }));
+
+    try {
+      const endpoint = wasFollowing
+        ? "http://localhost:3000/api/users/unfollow"
+        : "http://localhost:3000/api/users/follow";
+
+      await axios.post(endpoint, {
+        followerId: currentUser._id,
+        followeeId: profileUser._id,
+      });
+
+      // Update currentUser's followingUsers
+      if (currentUser.followingUsers) {
+        const updatedFollowing = wasFollowing
+          ? currentUser.followingUsers.filter(
+              (id) => id.toString() !== profileUser._id.toString()
+            )
+          : [...currentUser.followingUsers, profileUser._id];
+
+        setCurrentUser((prev) => ({
+          ...prev,
+          followingUsers: updatedFollowing,
+        }));
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      // Revert on error
+      setIsFollowing(wasFollowing);
+      setProfileUser((prev) => ({
+        ...prev,
+        followersCount: oldFollowersCount,
+      }));
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  
   // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
@@ -126,7 +127,6 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchUserPosts = async () => {
-      // Check if user exists and has posts
       if (
         !profileUser?._id ||
         !profileUser?.posts ||
@@ -139,17 +139,13 @@ const ProfilePage = () => {
 
       try {
         setLoadingPosts(true);
-
-        // Convert to comma-separated string
         const idsString = profileUser.posts.join(",");
-
         const response = await axios.get(
-          `http://localhost:3000/api/posts/by-ids?ids=${idsString}` // Use relative path
+          `http://localhost:3000/api/posts/by-ids?ids=${idsString}`
         );
 
         setUserPosts(response.data);
 
-        // Initialize vote counts
         const initialUpvoteCounts = new Map();
         const initialDownvoteCounts = new Map();
 
@@ -167,132 +163,9 @@ const ProfilePage = () => {
       }
     };
 
-    fetchUserPosts();
+    if (profileUser) fetchUserPosts();
   }, [profileUser]);
 
-  // Load user's existing votes
-  useEffect(() => {
-    const loadUserVotes = async () => {
-      if (currentUser?._id || user?.sub) {
-        try {
-          const userId = currentUser?._id || user?.sub;
-          const response = await axios.get(
-            `http://localhost:3000/api/posts/votes/${userId}`
-          );
-          if (response.data) {
-            const votesMap = new Map();
-            Object.entries(response.data).forEach(([postId, voteType]) => {
-              votesMap.set(postId, voteType);
-            });
-            setVotedPosts(votesMap);
-          }
-        } catch (error) {
-          console.error("Error loading user votes:", error);
-        }
-      }
-    };
-
-    if (userPosts.length > 0) {
-      loadUserVotes();
-    }
-  }, [userPosts, currentUser, user]);
-
-  const handleVote = async (postId, voteType) => {
-    try {
-      const currentVote = votedPosts.get(postId);
-      const currentUpvotes = upvoteCounts.get(postId) || 0;
-      const currentDownvotes = downvoteCounts.get(postId) || 0;
-
-      let newUpvotes = currentUpvotes;
-      let newDownvotes = currentDownvotes;
-      let newVoteType = voteType;
-
-      if (currentVote === voteType) {
-        newVoteType = null;
-        if (voteType === "up") {
-          newUpvotes = Math.max(0, currentUpvotes - 1);
-        } else {
-          newDownvotes = Math.max(0, currentDownvotes - 1);
-        }
-      } else if (currentVote && currentVote !== voteType) {
-        if (currentVote === "up" && voteType === "down") {
-          newUpvotes = Math.max(0, currentUpvotes - 1);
-          newDownvotes = currentDownvotes + 1;
-        } else if (currentVote === "down" && voteType === "up") {
-          newDownvotes = Math.max(0, currentDownvotes - 1);
-          newUpvotes = currentUpvotes + 1;
-        }
-      } else {
-        if (voteType === "up") {
-          newUpvotes = currentUpvotes + 1;
-        } else {
-          newDownvotes = currentDownvotes + 1;
-        }
-      }
-
-      // Optimistic UI update
-      setUpvoteCounts((prev) => new Map(prev).set(postId, newUpvotes));
-      setDownvoteCounts((prev) => new Map(prev).set(postId, newDownvotes));
-
-      const newVotedPosts = new Map(votedPosts);
-      if (newVoteType === null) {
-        newVotedPosts.delete(postId);
-      } else {
-        newVotedPosts.set(postId, newVoteType);
-      }
-      setVotedPosts(newVotedPosts);
-
-      // Send request to backend
-      const response = await axios.post(
-        `http://localhost:3000/api/posts/${postId}/vote`,
-        {
-          voteType: newVoteType,
-          userId: currentUser?._id || user?.sub,
-        }
-      );
-
-      // Update with server response
-      setUpvoteCounts((prev) =>
-        new Map(prev).set(postId, response.data.upvotes?.length || 0)
-      );
-      setDownvoteCounts((prev) =>
-        new Map(prev).set(postId, response.data.downvotes?.length || 0)
-      );
-    } catch (error) {
-      console.error("Error voting:", error);
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const userId = currentUser?._id || user?.sub;
-      if (!userId) return;
-
-      const endpoint = isFollowing ? "unfollow" : "follow";
-      await axios.post(
-        `http://localhost:3000/api/users/${profileUser._id}/${endpoint}`,
-        { userId }
-      );
-
-      setIsFollowing(!isFollowing);
-      // Update follower count optimistically
-      setProfileUser((prev) => ({
-        ...prev,
-        followersCount: isFollowing
-          ? prev.followersCount - 1
-          : prev.followersCount + 1,
-      }));
-    } catch (error) {
-      console.error("Error toggling follow:", error);
-    }
-  };
-
-  // Render loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -307,7 +180,6 @@ const ProfilePage = () => {
     );
   }
 
-  // Render error state
   if (error || !profileUser) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
@@ -346,313 +218,77 @@ const ProfilePage = () => {
     );
   }
 
-  // Render posts list
-  const renderPostsList = (posts, loading) => {
-    if (loading) {
-      return (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
-        </div>
-      );
-    }
-
-    if (posts.length === 0) {
-      return (
-        <div className="text-center py-16">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-10 h-10 text-[#AD49E1]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-semibold text-white mb-3">
-            No posts yet
-          </h3>
-          <p className="text-[#818384] max-w-md mx-auto mb-8 text-lg">
-            {activeTab === "saved"
-              ? "You haven't saved any posts yet"
-              : "This user hasn't created any posts yet"}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        {posts.map((post) => {
-          const isExpanded = expandedPosts.has(post._id);
-          const userVote = votedPosts.get(post._id);
-          const upvoteCount = upvoteCounts.get(post._id) || 0;
-          const downvoteCount = downvoteCounts.get(post._id) || 0;
-
-          return (
-            <article
-              key={post._id}
-              className="bg-[#111111] border-b border-[#222] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-3xl">
-              {/* Post Header */}
-              <div className="flex items-center justify-between sm:px-6 px-2 mb-1 pt-3">
-                <div className="flex items-center gap-3 mb-1">
-                  <img
-                    className="w-12 h-12 object-cover object-center"
-                    src={post.community_dp}
-                    alt="community"
-                  />
-                  <div>
-                    <h2 className="text-white font-medium text-[15px]">
-                      c/{post.communityHandle || "Astronomy"}
-                    </h2>
-                    <p className="text-[#818384] text-[12px] flex items-center">
-                      <span>
-                        n/
-                        {(post.userHandle || "anonymous")
-                          .toLowerCase()
-                          .replace(/\s+/g, "")}
-                      </span>
-                      <span className="mx-1.5">•</span>{" "}
-                      {formatDate(post.createdAt)} ago
-                    </p>
-                  </div>
-                </div>
-
-                <button className="text-[#a0a2a4] hover:text-white p-2 rounded-full hover:bg-[#1f1f1f] transition-colors duration-200">
-                  <MoreHorizontal size={18} />
-                </button>
-              </div>
-
-              {/* Post Title */}
-              <Link
-                to={`/post/${post._id}`}
-                state={{
-                  post,
-                  user: currentUser,
-                  backgroundLocation: location,
-                }}
-                className="text-[18px] font-bold text-white mb-4 sm:px-6 px-2 leading-tight cursor-pointer hover:text-[#AD49E1] transition-colors duration-300 block"
-                onClick={() => togglePostExpansion(post._id)}>
-                {post.title || "Research Summary"}
-              </Link>
-
-              {/* Post Image */}
-              {post.imageUrl?.length > 0 && (
-                <div className="relative mb-4 bg-[#101010] overflow-hidden">
-                  <div className="w-full" style={{ minHeight: "300px" }}>
-                    <img
-                      src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
-                      alt="Post content"
-                      className={`mx-auto w-full h-auto max-h-[600px] object-contain cursor-pointer transition-all duration-500 ease-in-out
-                      ${
-                        isExpanded
-                          ? "opacity-100 blur-0"
-                          : "opacity-100 blur-sm"
-                      }`}
-                      style={{
-                        transition: "filter 0.4s ease, opacity 0.4s ease",
-                      }}
-                      onClick={() => togglePostExpansion(post._id)}
-                      onLoad={(e) => {
-                        e.target.classList.remove("blur-sm");
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Post Content */}
-              <div className="mb-0 text-[#d7dadc] sm:px-6 px-2 leading-relaxed">
-                {isExpanded ? (
-                  <p className="text-[14px]">{post.description}</p>
-                ) : (
-                  <p className="text-[14px]">
-                    {truncateText(post.description)}{" "}
-                    {post.description &&
-                      post.description.split(" ").length > 20 && (
-                        <button
-                          onClick={() => togglePostExpansion(post._id)}
-                          className="text-[#d7dadc] hover:text-[#d7dadc] cursor-pointer transition-colors duration-300 font-medium">
-                          Read more
-                        </button>
-                      )}
-                  </p>
-                )}
-              </div>
-
-              {/* Action Bar */}
-              <div className="flex items-center justify-between pt-2 pb-3 sm:px-6 px-2">
-                <div className="flex items-center gap-6">
-                  <Link
-                    to={`/post/${post._id}`}
-                    state={{
-                      post,
-                      user: currentUser,
-                      backgroundLocation: location,
-                    }}
-                    className="flex items-center gap-2 text-[#818384] hover:text-[#AD49E1] hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm font-medium">
-                    <MessageSquare size={16} />
-                    <span>{post.comments.length}</span>
-                  </Link>
-
-                  {/* Vote buttons */}
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => handleVote(post._id, "up")}
-                      className={`flex items-center gap-1 px-3 py-2 transition-all duration-200
-                        ${
-                          userVote === "up"
-                            ? "text-red-600"
-                            : "text-[#818384] hover:text-red-500"
-                        }`}>
-                      <ChevronUp size={16} />
-                      <span className="text-sm font-medium">
-                        {formatVoteCount(upvoteCount)}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={() => handleVote(post._id, "down")}
-                      className={`flex items-center gap-1 px-3 py-2 transition-all duration-200
-                        ${
-                          userVote === "down"
-                            ? "text-[#7193ff]"
-                            : "text-[#818384] hover:text-[#7193ff]"
-                        }`}>
-                      <ChevronDown size={16} />
-                      <span className="text-sm font-medium">
-                        {formatVoteCount(downvoteCount)}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                    <Share size={16} />
-                    <span className="hidden sm:inline">Share</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                    <Bookmark size={16} />
-                    <span className="hidden sm:inline">Save</span>
-                  </button>
-
-                  {isExpanded && (
-                    <button
-                      onClick={() => togglePostExpansion(post._id)}
-                      className="flex items-center gap-2 text-[#818384] hover:text-white hover:bg-[#1a1a1a] px-3 py-2 rounded-full transition-all duration-300 text-sm">
-                      <ChevronUp size={16} />
-                      <span className="hidden sm:inline">Collapse</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e1e1e1] flex">
       <div className="flex-1 flex flex-col">
         {/* Banner */}
-        <div className="relative">
-          <div
-            className="sm:h-64 h-30 overflow-hidden"
-            style={{
-              backgroundImage: `linear-gradient(to top right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.3) 60%, rgba(0, 0, 0, 0) 100%), url("https://images.unsplash.com/photo-1534447677768-be436bb09401?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1792&q=80")`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}>
-            <div className="absolute inset-0 flex sm:items-end items-center justify-start">
-              <div className="container mx-auto sm:px-4 px-0 sm:pb-6 pb-0">
-                <div className="flex sm:items-end items-center sm:gap-6 gap-4">
-                  <div className="sm:w-50 sm:h-50 w-25 h-25 rounded-full">
-                    {profileUser.profilePicture ? (
-                      <img
-                        src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${profileUser.profilePicture}`}
-                        alt={profileUser.name}
-                        className="w-full h-full rounded-full object-contain"
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-xl flex items-center justify-center text-white text-4xl font-bold">
-                        {profileUser.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Title and Info */}
-                  <div className="text-white">
-                    <h1
-                      className="sm:text-5xl text-xs sm:mb-3 font-bold"
-                      style={{ color: "#ffffff" }}>
-                      {profileUser.name}
-                    </h1>
+        <ProfileBanner
+          profileUser={profileUser}
+          userPosts={userPosts}
+          currentUser={currentUser}
+          isFollowing={isFollowing}
+          isFollowLoading={isFollowLoading}
+          handleFollowToggle={handleFollowToggle}
+        />
 
-                    <p
-                      className="sm:text-xl text-xs opacity-90 sm:mt-1"
-                      style={{ color: "#ffffff" }}>
-                      n/{profileUser.handle}
-                    </p>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-6 sm:mt-4">
-                      <div className="flex items-center sm:text-base text-xs text-[#d7dadc]">
-                        <FileText className="sm:h-5 sm:w-5 w-3 h-3 mr-2" />
-                        <span>{userPosts.length} posts</span>
-                      </div>
-                      <div className="flex items-center sm:text-base text-xs text-[#d7dadc]">
-                        <Bookmark className="sm:h-5 sm:w-5 w-3 h-3 mr-2" />
-                        <span>{savedPosts.length} saved</span>
-                      </div>
-                      <div className="flex items-center sm:text-base text-xs text-[#d7dadc]">
-                        <Users className="sm:h-5 sm:w-5 w-3 h-3 mr-2" />
-                        <span>{profileUser.followersCount} followers</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-[#333] mb-6">
-          <div className="max-w-4xl mx-auto px-4 flex">
-            <button
-              className={`px-4 py-3 font-medium text-sm border-b-2 ${
-                activeTab === "posts"
-                  ? "border-[#AD49E1] text-white"
-                  : "border-transparent text-[#818384] hover:text-white"
-              }`}
-              onClick={() => setActiveTab("posts")}>
-              Posts
-            </button>
-            <button
-              className={`px-4 py-3 font-medium text-sm border-b-2 ${
-                activeTab === "saved"
-                  ? "border-[#AD49E1] text-white"
-                  : "border-transparent text-[#818384] hover:text-white"
-              }`}
-              onClick={() => setActiveTab("saved")}>
-              Saved
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
+        {/* Posts Section */}
         <div className="max-w-4xl mx-auto px-4 pb-8 w-full">
-          {activeTab === "posts"
-            ? renderPostsList(userPosts, loadingPosts)
-            : renderPostsList(savedPosts, loadingSaved)}
+          {loadingPosts ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
+            </div>
+          ) : userPosts.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-10 h-10 text-[#AD49E1]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold text-white mb-3">
+                No posts yet
+              </h3>
+            </div>
+          ) : (
+            <div className="space-y-0 sm:border overflow-hidden border-[#222]">
+              {userPosts.map((post) => {
+                const isExpanded = expandedPosts.has(post._id);
+                const userVote = votedPosts.get(post._id);
+                const upvoteCount = upvoteCounts.get(post._id) || 0;
+                const downvoteCount = downvoteCounts.get(post._id) || 0;
+
+                return (
+                  <PostCard
+                    key={post._id}
+                    post={post}
+                    currentUser={currentUser}
+                    isExpanded={isExpanded}
+                    togglePostExpansion={togglePostExpansion}
+                    userVote={userVote}
+                    upvoteCount={upvoteCount}
+                    downvoteCount={downvoteCount}
+                    handleVote={handleVote}
+                    savedPosts={savedPosts}
+                    handleSavePost={handleSavePost}
+                    formatDate={formatDate}
+                    truncateText={truncateText}
+                    formatVoteCount={formatVoteCount}
+                    location={location}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

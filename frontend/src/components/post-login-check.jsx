@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import "../styles/space-background.css";
 import { useNavigate } from "react-router-dom";
 
 const PostLoginCheck = () => {
@@ -71,11 +72,15 @@ const PostLoginCheck = () => {
   }, [isAuthenticated, isLoading, animationCompleted, user, navigate]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-black text-[#AD49E1]">
-      <div className="text-5xl font-extrabold tracking-widest">
+    <div className="flex items-center  font-[Orbitron] justify-center h-screen space-background text-white">
+      <div className="stars"></div>
+      <div className="stars2"></div>
+      <div className="stars3"></div>
+      <div className="stars4"></div>
+      <div className="text-9xl font-extrabold tracking-widest">
         {displayText}
         <span
-          className={`inline-block align-middle w-1 h-12 ml-1 bg-white ${
+          className={`inline-block align-middle w-[1px] h-25 ml-1 bg-white ${
             displayText.length === fullText.length ? "animate-pulse" : ""
           }`}></span>
       </div>

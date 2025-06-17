@@ -21,9 +21,7 @@ import {
 
 const Profile = () => {
   const { user } = useAuth0();
-
-  //This is mock user data for frontend development only
-  // Will be replaced with real API data once backend is ready
+ 
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(location.state?.user,
   );
@@ -302,3 +300,374 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
+
+// import React, { useState, useEffect } from "react";
+// import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+// import { useAuth0 } from "@auth0/auth0-react";
+// import PostCard from "./Post";
+// import axios from "axios";
+// import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
+// import useFeedData from "../hooks/useFeedData";
+// import { 
+//   Bookmark, 
+//   Users,
+//   FileText, 
+// } from "lucide-react";
+
+// const ProfilePage = () => {
+//   const { handle } = useParams();
+//   const { logout, user, isAuthenticated } = useAuth0();
+//   const navigate = useNavigate();
+//   const location = useLocation();
+//   const [currentUser, setCurrentUser] = useState(location.state?.user || null);
+//   const [userhandle, setuserhandle] = useState(location.state?.handle || null);
+//   const [profileUser, setProfileUser] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [isFollowing, setIsFollowing] = useState(false); 
+//   const [loadingSaved, setLoadingSaved] = useState(true);
+//   const [activeTab, setActiveTab] = useState("posts"); // 'posts' or 'saved'
+//   const [userPosts, setUserPosts] = useState([]);
+//   const [loadingPosts, setLoadingPosts] = useState(true); 
+
+  
+//     const {
+//       expandedPosts,
+//       votedPosts,
+//       upvoteCounts,
+//       polls,
+//       savedPosts,
+//       downvoteCounts,
+//       communities,
+//       posts,
+//       loading: feedLoading,
+//       error: feedError,
+//       togglePostExpansion,
+//       handleSavePost,
+//       handleVote,
+//       setVotedPosts,
+//       setUpvoteCounts,
+//       setDownvoteCounts,
+//     } = useFeedData(currentUser, user);
+
+//   // Fetch saved posts
+//   useEffect(() => {
+//     const fetchSavedPosts = async () => {
+//       if (currentUser?._id) {
+//         try {
+//           const response = await fetch(
+//             `http://localhost:3000/api/users/saved-posts/${currentUser._id}`
+//           );
+//           if (response.ok) {
+//             const saved = await response.json();
+//             setSavedPosts(saved);
+//             setLoadingSaved(false);
+//           }
+//         } catch (error) {
+//           console.error("Error loading saved posts:", error);
+//           setLoadingSaved(false);
+//         }
+//       }
+//     };
+
+//     fetchSavedPosts();
+//   }, [currentUser]);
+
+//   // Fetch user data
+//   useEffect(() => {
+//     const fetchUserData = async () => {
+//       try {
+//         setIsLoading(true);
+//         const response = await axios.get(
+//           `http://localhost:3000/api/users/handle/${userhandle}`
+//         );
+//         setProfileUser(response.data);
+//         setIsLoading(false);
+//       } catch (err) {
+//         setError("Failed to load profile");
+//         setIsLoading(false);
+//         console.error(err);
+//       }
+//     };
+
+//     fetchUserData();
+//   }, [handle, currentUser, user]);
+
+//   useEffect(() => {
+//     const fetchUserPosts = async () => {
+//       // Check if user exists and has posts
+//       if (
+//         !profileUser?._id ||
+//         !profileUser?.posts ||
+//         profileUser.posts.length === 0
+//       ) {
+//         setUserPosts([]);
+//         setLoadingPosts(false);
+//         return;
+//       }
+
+//       try {
+//         setLoadingPosts(true);
+
+//         // Convert to comma-separated string
+//         const idsString = profileUser.posts.join(",");
+
+//         const response = await axios.get(
+//           `http://localhost:3000/api/posts/by-ids?ids=${idsString}` // Use relative path
+//         );
+
+//         setUserPosts(response.data);
+
+//         // Initialize vote counts
+//         const initialUpvoteCounts = new Map();
+//         const initialDownvoteCounts = new Map();
+
+//         response.data.forEach((post) => {
+//           initialUpvoteCounts.set(post._id, post.upvotes?.length || 0);
+//           initialDownvoteCounts.set(post._id, post.downvotes?.length || 0);
+//         });
+
+//         setUpvoteCounts(initialUpvoteCounts);
+//         setDownvoteCounts(initialDownvoteCounts);
+//       } catch (error) {
+//         console.error("Error loading user posts:", error);
+//       } finally {
+//         setLoadingPosts(false);
+//       }
+//     };
+
+//     fetchUserPosts();
+//   }, [profileUser]);
+
+
+
+
+//   // Render loading state
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#AD49E1] mx-auto mb-4"></div>
+//           <h2 className="text-xl font-medium text-white">
+//             Loading Profile Data
+//           </h2>
+//           <p className="text-[#818384]">Analyzing user information...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Render error state
+//   if (error || !profileUser) {
+//     return (
+//       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+//         <div className="bg-[#111111] p-8 rounded-3xl max-w-md w-full shadow-2xl border border-[#272b30]">
+//           <div className="text-center">
+//             <div className="bg-red-500/20 p-4 rounded-full inline-flex">
+//               <svg
+//                 xmlns="http://www.w3.org/2000/svg"
+//                 className="h-12 w-12 text-red-400"
+//                 fill="none"
+//                 viewBox="0 0 24 24"
+//                 stroke="currentColor">
+//                 <path
+//                   strokeLinecap="round"
+//                   strokeLinejoin="round"
+//                   strokeWidth={2}
+//                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+//                 />
+//               </svg>
+//             </div>
+//             <h2 className="text-2xl font-bold text-white mt-4">
+//               Profile Not Found
+//             </h2>
+//             <p className="text-[#818384] mt-2">
+//               The user <span className="font-mono">u/{handle}</span> could not
+//               be located in our database.
+//             </p>
+//             <button
+//               onClick={() => window.history.back()}
+//               className="mt-6 bg-gradient-to-r from-[#AD49E1] to-[#AD49E1] text-white font-medium py-2 px-6 rounded-full transition-all duration-300">
+//               Return to Previous Page
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Render posts list
+//   const renderPostsList = (posts, loading) => {
+//     if (loading) {
+//       return (
+//         <div className="flex justify-center py-12">
+//           <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent"></div>
+//         </div>
+//       );
+//     }
+
+//     if (posts.length === 0) {
+//       return (
+//         <div className="text-center py-16">
+//           <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+//             <svg
+//               xmlns="http://www.w3.org/2000/svg"
+//               className="w-10 h-10 text-[#AD49E1]"
+//               fill="none"
+//               viewBox="0 0 24 24"
+//               stroke="currentColor">
+//               <path
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//                 strokeWidth={2}
+//                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+//               />
+//             </svg>
+//           </div>
+//           <h3 className="text-2xl font-semibold text-white mb-3">
+//             No posts yet
+//           </h3>
+//           <p className="text-[#818384] max-w-md mx-auto mb-8 text-lg">
+//             {activeTab === "saved"
+//               ? "You haven't saved any posts yet"
+//               : "This user hasn't created any posts yet"}
+//           </p>
+//         </div>
+//       );
+//     }
+
+//     return (
+//       <div className="space-y-0 sm:border overflow-hidden border-[#222]">
+//         {posts.map((post) => {
+//           const isExpanded = expandedPosts.has(post._id);
+//           const userVote = votedPosts.get(post._id);
+//           const upvoteCount = upvoteCounts.get(post._id) || 0;
+//           const downvoteCount = downvoteCounts.get(post._id) || 0;
+
+//           return (
+//             <PostCard
+//               key={post._id}
+//               post={post}
+//               currentUser={currentUser}
+//               isExpanded={isExpanded}
+//               togglePostExpansion={togglePostExpansion}
+//               userVote={userVote}
+//               upvoteCount={upvoteCount}
+//               downvoteCount={downvoteCount}
+//               handleVote={handleVote}
+//               savedPosts={savedPosts}
+//               handleSavePost={handleSavePost}
+//               formatDate={formatDate}
+//               truncateText={truncateText}
+//               formatVoteCount={formatVoteCount}
+//               location={location}
+//             />
+//           );
+//         })}
+//       </div>
+//     );
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-[#0a0a0a] text-[#e1e1e1] flex">
+//       <div className="flex-1 flex flex-col">
+//         {/* Banner */}
+//         <div className="relative">
+//           <div
+//             className="sm:h-64 h-30 overflow-hidden"
+//             style={{
+//               backgroundImage: `linear-gradient(to top right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.3) 60%, rgba(0, 0, 0, 0) 100%), url("https://images.unsplash.com/photo-1534447677768-be436bb09401?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1792&q=80")`,
+//               backgroundSize: "cover",
+//               backgroundPosition: "center",
+//             }}>
+//             <div className="absolute inset-0 flex sm:items-end items-center justify-start">
+//               <div className="container mx-auto sm:px-4 px-0 sm:pb-6 pb-0">
+//                 <div className="flex sm:items-end items-center sm:gap-6 gap-4">
+//                   <div className="sm:w-50 sm:h-50 w-25 h-25 rounded-full">
+//                     {profileUser.profilePicture ? (
+//                       <img
+//                         src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${profileUser.profilePicture}`}
+//                         alt={profileUser.name}
+//                         className="w-full h-full rounded-full object-contain"
+//                       />
+//                     ) : (
+//                       <div className="w-full h-full rounded-xl flex items-center justify-center text-white text-4xl font-bold">
+//                         {profileUser.name.charAt(0)}
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* Title and Info */}
+//                   <div className="text-white">
+//                     <h1
+//                       className="sm:text-5xl text-xs sm:mb-3 font-bold"
+//                       style={{ color: "#ffffff" }}>
+//                       {profileUser.name}
+//                     </h1>
+
+//                     <p
+//                       className="sm:text-xl text-xs opacity-90 sm:mt-1"
+//                       style={{ color: "#ffffff" }}>
+//                       n/{profileUser.handle}
+//                     </p>
+
+//                     {/* Stats */}
+//                     <div className="flex items-center gap-6 sm:mt-4">
+//                       <div className="flex items-center sm:text-base text-xs text-[#d7dadc]">
+//                         <FileText className="sm:h-5 sm:w-5 w-3 h-3 mr-2" />
+//                         <span>{userPosts.length} posts</span>
+//                       </div>
+//                       <div className="flex items-center sm:text-base text-xs text-[#d7dadc]">
+//                         <Bookmark className="sm:h-5 sm:w-5 w-3 h-3 mr-2" />
+//                         <span>{savedPosts.length} saved</span>
+//                       </div>
+//                       <div className="flex items-center sm:text-base text-xs text-[#d7dadc]">
+//                         <Users className="sm:h-5 sm:w-5 w-3 h-3 mr-2" />
+//                         <span>{profileUser.followersCount} followers</span>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Tabs */}
+//         <div className="border-b border-[#333] ">
+//           <div className="max-w-4xl mx-auto px-4 flex">
+//             <button
+//               className={`px-4 py-3 font-medium text-sm border-b-2 ${
+//                 activeTab === "posts"
+//                   ? "border-[#AD49E1] text-white"
+//                   : "border-transparent text-[#818384] hover:text-white"
+//               }`}
+//               onClick={() => setActiveTab("posts")}>
+//               Posts
+//             </button>
+//             <button
+//               className={`px-4 py-3 font-medium text-sm border-b-2 ${
+//                 activeTab === "saved"
+//                   ? "border-[#AD49E1] text-white"
+//                   : "border-transparent text-[#818384] hover:text-white"
+//               }`}
+//               onClick={() => setActiveTab("saved")}>
+//               Saved
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Content */}
+//         <div className="max-w-4xl mx-auto px-4 pb-8 w-full">
+//           {activeTab === "posts"
+//             ? renderPostsList(userPosts, loadingPosts)
+//             : renderPostsList(savedPosts, loadingSaved)}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ProfilePage;

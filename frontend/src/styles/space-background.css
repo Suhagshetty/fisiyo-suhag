@@ -35,7 +35,7 @@
     radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
   background-repeat: repeat;
   background-size: 200px 100px;
-  animation: zoom 20s infinite linear;
+  animation: zoom 60s infinite linear;
   opacity: 0;
 }
 
@@ -47,7 +47,7 @@
     radial-gradient(1px 1px at 175px 85px, rgba(255,255,255,0.5), transparent);
   background-repeat: repeat;
   background-size: 250px 120px;
-  animation: zoom 30s infinite linear;
+  animation: zoom 50s infinite linear;
   opacity: 0;
 }
 
@@ -59,7 +59,7 @@
     radial-gradient(2px 2px at 195px 95px, rgba(255,255,255,0.6), transparent);
   background-repeat: repeat;
   background-size: 300px 150px;
-  animation: zoom 40s infinite linear;
+  animation: zoom 55s infinite linear;
   opacity: 0;
 }
 .stars4 {
@@ -70,7 +70,7 @@
     radial-gradient(2px 2px at 195px 95px, rgba(255,255,255,0.6), transparent);
   background-repeat: repeat;
   background-size: 300px 150px;
-  animation: zoom 10s infinite linear;
+  animation: zoom 65s infinite linear;
   opacity: 0;
 }
 
@@ -160,8 +160,9 @@
 }
 
 @keyframes float5 {
-  0%, 100% { transform: translateX(-10%) translateY(0px) rotate(0deg); }
-  50% { transform: translateX(-10%) translateY(-12px) rotate(7deg); }
+  0%, 
+  100% { transform: translateX(-1%) translateY(0px) rotate(0deg); }
+  50% { transform: translateX(1%) translateY(2px) rotate(2deg); }
 }
 
 /* Enhanced Animations */
