@@ -252,8 +252,7 @@ const PostCard = ({
                 size={16}
                 fill={savedPosts.has(post._id) ? "#AD49E1" : "none"}
               />
-              <span className="hidden sm:inline">
-                {/* {savedPosts.has(post._id) ? "Saved" : "Save"} */}
+              <span className="hidden sm:inline"> 
               </span>
             </button>
 

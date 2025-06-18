@@ -78,13 +78,24 @@ router.post("/create-post", async (req, res) => {
   }
 });
 
+// router.get("/posts", async (req, res) => {
+//   try {
+//     const posts = await Post.find().sort({ createdAt: -1 });
+//     res.status(200).json(posts);
+//   } catch (err) {
+//     console.error("Fetch posts error:", err);
+//     res.status(500).json({ error: "Failed to fetch posts" });
+//   }
+// });
+
+
 router.get("/posts", async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 });
+    const posts = await Post.find({ isApproved: true }).sort({ createdAt: -1 });
     res.status(200).json(posts);
   } catch (err) {
-    console.error("Fetch posts error:", err);
-    res.status(500).json({ error: "Failed to fetch posts" });
+    console.error("Fetch approved posts error:", err);
+    res.status(500).json({ error: "Failed to fetch approved posts" });
   }
 });
 
@@ -541,6 +552,56 @@ const randomPersonaPrompt =
     res.status(500).json({ error: "Failed to simulate comment" });
   }
 });
+// //////////////////////////////////////////////////////////////
 
+
+router.get("/posts/unapproved", async (req, res) => {
+  try {
+    const posts = await Post.find({ isApproved: false })
+      .populate("community", "name handle url author")
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching unapproved posts" });
+  }
+});
+
+router.patch("/posts/:id/approve", async (req, res) => {
+  try {
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $set: { isApproved: true } },
+      { new: true }
+    );
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json({ message: "Post approved successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error approving post" });
+  }
+});
+
+// In your posts API routes
+router.delete('/posts/:id/disapprove', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Delete post from MongoDB
+    await Post.findByIdAndDelete(req.params.id);
+    
+    // Respond immediately - images are deleted separately
+    res.status(200).json({ message: "Post disapproved and deleted" });
+  } catch (err) {
+    console.error("Error disapproving post:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export default router;

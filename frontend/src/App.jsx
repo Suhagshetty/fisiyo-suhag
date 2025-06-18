@@ -15,6 +15,8 @@ import CreatePoll from "./components/CreatePoll";
 import CreateDiscussion from "./components/CreateDiscussion";
 import ProfilePage from "./components/ProfilePage";
 import PollDetail from "./components/PollDetail";
+import AdminApprovePosts from "./components/AdminApprovePosts";
+import NotificationSection from "./components/NotificationSection";
 
 function App() {
   const location = useLocation();
@@ -37,10 +39,8 @@ function App() {
         <Route path="/community-setup" element={<CommunityCreator />} />
         <Route path="/c/:name" element={<CommunityPage />} />
         <Route path="/n/:name" element={<ProfilePage />} />
-        {/* <Route path="/poll/:pollId" element={<PollDetail />} />
-        <Route path="/post/:postId" element={<PostDetail />} /> */}
-        <Route path="/compose/post" element={<CreatePost isModal={false} />} />
-        {/* <Route path="/compose/poll" element={<CreatePoll isModal={false} />} /> */}
+        <Route path="/admin/approve-posts" element={<AdminApprovePosts />} />
+        {/* <Route path="/notifications" element={<NotificationSection />} /> */}
       </Routes>
 
       {/* Modal routes - only render when modal state is present */}

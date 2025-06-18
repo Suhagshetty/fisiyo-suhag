@@ -79,6 +79,10 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isApproved: {
+      type: Boolean,
+      default: false, 
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt automatically

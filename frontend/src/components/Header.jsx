@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, Search, Bell, Loader2, X } from "lucide-react";
 import { fetchSuggestions, handleKeyDown } from "../utils/HeaderUtils";
+import ProfileSection from "./ProfileSection"; // Add this import
 
 
 const Header = ({ toggleSidebar, isAuthenticated, currentUser }) => {
@@ -158,28 +159,10 @@ const Header = ({ toggleSidebar, isAuthenticated, currentUser }) => {
         </div>
 
         {/* Profile section */}
-        {isAuthenticated && (
-          <Link
-            to={`/n/${currentUser.handle}`}
-            state={{ user: currentUser, handle: currentUser.handle }}>
-            <div className="flex items-center gap-0 sm:gap-4">
-              <button className="text-[#818384] hover:text-white sm:p-3 px-1 rounded-full hover:bg-[#1a1a1a] transition-all duration-300">
-                <Bell size={20} />
-              </button>
-              <div className="cursor-pointer hover:bg-[#1a1a1a] px-2 sm:px-3 py-2 rounded-xl transition-all duration-300">
-                <img
-                  src={
-                    currentUser?.profilePicture
-                      ? `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${currentUser.profilePicture}`
-                      : "/default-avatar.png"
-                  }
-                  alt="Profile"
-                  className="sm:w-9 sm:h-9 w-7 h-7 rounded-full object-cover"
-                />
-              </div>
-            </div>
-          </Link>
-        )}
+        <ProfileSection
+          isAuthenticated={isAuthenticated}
+          currentUser={currentUser}
+        />
       </div>
     </header>
   );

@@ -5,6 +5,7 @@ import userRoutes from "./routes/users.js";
 import postRoutes from "./routes/createPost.js"
 import commintyRoutes from "./routes/communities.js"
 import pollRoutes from "./routes/Poll.js"
+import NotificationRoutes from "./routes/notification.js"
 
 import multer from "multer";
 import { createClient } from "@supabase/supabase-js";
@@ -19,7 +20,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(
   cors({
     origin: "http://localhost:5173", 
-    methods: ["POST", "GET", "PUT", "DELETE"],
+    methods: ["POST", "GET", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -28,6 +29,7 @@ app.use("/api/users", userRoutes);
 app.use("/api", postRoutes);
 app.use("/api/communities", commintyRoutes);
 app.use("/api/polls", pollRoutes);
+app.use("/api/notifications", NotificationRoutes);
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -86,7 +88,35 @@ mongoose
       res.status(500).json({ error: "Internal server error" });
     }
   });
-  
+
+ // BACKEND - Public route now (no auth required)
+app.post("/delete", async (req, res) => {
+  try {
+    const { imageUrls } = req.body;
+
+    if (!imageUrls || !Array.isArray(imageUrls)) {
+      return res.status(400).json({ error: "Invalid image URLs" });
+    }
+
+    // Delete each image from Supabase storage
+    const deletePromises = imageUrls.map(async (imagePath) => {
+      const { error } = await supabase.storage
+        .from("posts")
+        .remove([`uploads/${imagePath}`]);
+
+      if (error) {
+        console.error(`Error deleting image ${imagePath}:`, error);
+      }
+    });
+
+    await Promise.all(deletePromises);
+    res.status(200).json({ message: "Images deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting images:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Express app!");

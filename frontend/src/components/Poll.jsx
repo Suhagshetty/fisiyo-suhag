@@ -22,16 +22,16 @@ const Poll = ({
   const expiration = new Date(poll.expiresAt);
   const hasExpired = expiration < now;
   const currentUserHasVoted = poll.votedUsers.includes(currentUser?._id);
-  console.log(
-    " hasExpired    ",
-    hasExpired,
-    "poll.showVotesBeforeExpire",
-    poll.showVotesBeforeExpir,
-    " hasVoted",
-    hasVoted,
-    "currentUserHasVoted",
-    currentUserHasVoted
-  );
+  // console.log(
+  //   " hasExpired    ",
+  //   hasExpired,
+  //   "poll.showVotesBeforeExpire",
+  //   poll.showVotesBeforeExpir,
+  //   " hasVoted",
+  //   hasVoted,
+  //   "currentUserHasVoted",
+  //   currentUserHasVoted
+  // );
   
 
   // Calculate time remaining

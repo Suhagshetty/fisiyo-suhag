@@ -530,7 +530,8 @@ const ProfileSetup = () => {
         formData.gender &&
         formData.age &&
         handleAvailable !== false &&
-        !handleChecking
+        !handleChecking &&
+        profilePicturePreview
           ? "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20 cursor-pointer"
           : "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
       }`}

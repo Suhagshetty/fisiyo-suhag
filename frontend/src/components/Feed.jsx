@@ -46,7 +46,7 @@ const Feed = () => {
 
   // Handlers
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-console.log(polls);
+// console.log(polls);
 
   const handleCreatePost = () => {
     navigate("/compose/post", {

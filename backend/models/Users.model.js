@@ -68,6 +68,13 @@ const userSchema = new mongoose.Schema({
   followingUsers: [
     { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
   ],
+  notifications: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Notification",
+      default: [],
+    },
+  ],
 
   reputation: { type: Number, default: 0 },
   badges: { type: [String], default: [] },

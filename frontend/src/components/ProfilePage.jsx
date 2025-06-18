@@ -5,8 +5,7 @@ import PostCard from "./Post";
 import ProfileBanner from "./ProfileBanner";
 import axios from "axios";
 import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
-import useFeedData from "../hooks/useFeedData";
-import { FileText, Users } from "lucide-react";
+import useFeedData from "../hooks/useFeedData"; 
 
 const ProfilePage = () => {
   const { handle } = useParams();
@@ -104,7 +103,7 @@ const ProfilePage = () => {
     }
   };
 
-  
+
   // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
@@ -240,21 +239,7 @@ const ProfilePage = () => {
             </div>
           ) : userPosts.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#AD49E1]/20 to-[#AD49E1]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-10 h-10 text-[#AD49E1]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-              </div>
+            
               <h3 className="text-2xl font-semibold text-white mb-3">
                 No posts yet
               </h3>
