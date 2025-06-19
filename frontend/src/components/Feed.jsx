@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import { LogOut, Search, Bell, Menu, X } from "lucide-react";
 
 // Custom hooks
 import useFeedData from "../hooks/useFeedData";
@@ -15,19 +14,19 @@ import Poll from "./Poll";
 import FollowerSuggestions from "./FollowerSuggestions";
 import MobileNavBar from "./MobileNavBar";
 
-// Util functions
+// Utils
 import { formatDate, truncateText, formatVoteCount } from "../utils/feedUtils";
 
 const Feed = () => {
   const { logout, user, isAuthenticated } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // State management
+  const [filter, setFilter] = useState("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentUser] = useState(location.state?.user || null);
+  const dropdownRef = useRef(null);
 
-  // Custom data hook
   const {
     expandedPosts,
     votedPosts,
@@ -44,9 +43,27 @@ const Feed = () => {
     handleVote,
   } = useFeedData(currentUser, user);
 
-  // Handlers
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-// console.log(polls);
+
+  const filterOptions = [
+    { value: "all", label: "All Posts", icon: "📃" },
+    { value: "saved", label: "Saved", icon: "🔖" },
+    { value: "upvoted", label: "Upvoted", icon: "👍" },
+    { value: "downvoted", label: "Downvoted", icon: "👎" },
+  ];
+
+  const selectedOption = filterOptions.find((opt) => opt.value === filter);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleCreatePost = () => {
     navigate("/compose/post", {
@@ -56,6 +73,13 @@ const Feed = () => {
       },
     });
   };
+
+  const filteredPosts = posts.filter((post) => {
+    if (filter === "saved") return savedPosts.has(post._id);
+    if (filter === "upvoted") return votedPosts.get(post._id) === "up";
+    if (filter === "downvoted") return votedPosts.get(post._id) === "down";
+    return true;
+  });
 
   return (
     <div className="h-screen bg-[#0a0a0a] text-[#e1e1e1] flex overflow-hidden">
@@ -69,7 +93,6 @@ const Feed = () => {
         communities={communities}
       />
 
-      {/* Sidebar overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 backdrop-blur-sm bg-black/20 z-20 lg:hidden"
@@ -77,7 +100,6 @@ const Feed = () => {
         />
       )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <Header
           toggleSidebar={toggleSidebar}
@@ -89,8 +111,7 @@ const Feed = () => {
           className="flex-1 bg-[#0a0a0a] overflow-hidden"
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
           <div className="flex h-full justify-around">
-            {/* Main Feed */}
-            <div className="flex-1 w-[58%] overflow-y-auto sm:p-2 ">
+            <div className="flex-1 w-[58%] overflow-y-auto sm:p-2">
               {loading && (
                 <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#AD49E1] border-t-transparent" />
@@ -103,12 +124,66 @@ const Feed = () => {
                 </div>
               )}
 
-              {/* {!loading && posts.length === 0 && (
-                <EmptyState onCreatePost={handleCreatePost} />
-              )} */}
-
               {!loading && posts.length > 0 && (
-                <div className="space-y-0 sm:border sm:rounded-2xl overflow-hidden border-[#222]">
+                <div className="space-y-0 sm:border overflow-hidden rounded-2xl border-[#222]">
+                  {/* Premium Filter Dropdown */}
+                  <div
+                    className="relative mb-2 mt-2 flex justify-end px-2"
+                    ref={dropdownRef}>
+                    <button
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="flex items-center justify-between text-[#f0f0f0]  py-1  backdrop-blur-sm   text-sm w-full sm:w-25">
+                      <div className="flex items-center">
+                        <span>{selectedOption?.label}</span>
+                      </div>
+                      <svg
+                        className={`w-5 h-5 ml-2 text-[#AD49E1] transition-transform duration-200 ${
+                          dropdownOpen ? "rotate-180" : ""
+                        }`}
+                        viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path
+                          fillRule="evenodd"
+                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {dropdownOpen && (
+                      <div className="absolute z-10 mt-2 w-full sm:w-56 rounded-xl shadow-2xl shadow-[#AD49E1]/10 backdrop-blur-sm overflow-hidden">
+                        {filterOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              setFilter(option.value);
+                              setDropdownOpen(false);
+                            }}
+                            className={`flex items-center w-full px-4 py-3 text-sm transition-all z-300 duration-200 ${
+                              filter === option.value
+                                ? " text-[#AD49E1]"
+                                : "text-[#b0b0b0] hover:bg-[#2a2a2a]"
+                            }`}>
+                            <span>{option.label}</span>
+                            {filter === option.value && (
+                              <svg
+                                className="w-5 h-5 ml-auto text-[#AD49E1]"
+                                viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   {polls.map((poll) => (
                     <Poll
                       key={poll.id}
@@ -121,7 +196,9 @@ const Feed = () => {
                       handleSavePost={handleSavePost}
                     />
                   ))}
-                  {posts.map((post) => {
+
+                  {/* Filtered Posts */}
+                  {filteredPosts.map((post) => {
                     const isExpanded = expandedPosts.has(post._id);
                     const userVote = votedPosts.get(post._id);
                     const upvoteCount = upvoteCounts.get(post._id) || 0;
@@ -147,6 +224,13 @@ const Feed = () => {
                       />
                     );
                   })}
+
+                  {/* Nothing found */}
+                  {filteredPosts.length === 0 && (
+                    <div className="text-center py-8 text-[#888] text-sm">
+                      Nothing found for this filter.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -159,6 +243,7 @@ const Feed = () => {
             </div>
           </div>
         </main>
+
         <MobileNavBar navigate={navigate} currentUser={currentUser} />
       </div>
     </div>

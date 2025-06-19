@@ -596,7 +596,7 @@ const CreatePoll = ({
   if (isModal) {
     return (
       <div
-        className="fixed inset-0 bg-[#AD49E1]/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0  bg-[#AD49E1]/30 backdrop-blur-xs transition-opacity flex items-center justify-center z-50 p-4"
         onClick={handleBackdropClick}>
         {createPollContent()}
       </div>

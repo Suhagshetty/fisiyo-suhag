@@ -28,7 +28,7 @@ const [unreadCount, setUnreadCount] = useState(0);
       const response = await axios.get(
         `http://localhost:3000/api/notifications/${currentUser._id}`
       );
-      console.log(response.data);
+      // console.log(response.data);
 
       // Ensure we always set an array, even if response.data is null/undefined
       setNotifications(Array.isArray(response.data) ? response.data : []);
@@ -203,14 +203,7 @@ const [unreadCount, setUnreadCount] = useState(0);
             </div>
           )}
 
-          <div className="p-3 border-t border-[#333333] text-center">
-            <Link
-              to="/notifications"
-              className="text-xs text-purple-500 hover:text-purple-400"
-              onClick={() => setIsOpen(false)}>
-              View all notifications
-            </Link>
-          </div>
+
         </div>
       )}
     </div>

@@ -39,7 +39,7 @@ router.post("/create-post", async (req, res) => {
       title,
       description,
       tags,
-      imageUrl: imageUrl ? [imageUrl] : [],
+      imageUrl,
       author,
       userHandle,
       community,
@@ -245,7 +245,7 @@ router.get("/posts/votes/:userId", async (req, res) => {
 router.post('/posts/:postId/comments', async (req, res) => {
   try {
     const { postId } = req.params;
-    const { body, author, handle, userDp } = req.body;
+    const { body, author, handle, userDp, imageUrl } = req.body;
 
     // Create new comment
     const newComment = new Comment({
@@ -254,6 +254,7 @@ router.post('/posts/:postId/comments', async (req, res) => {
       handle,
       post: postId,
       userDp,
+      imageUrl,
     });
 
     const savedComment = await newComment.save();
@@ -309,7 +310,7 @@ router.post("/comments/:commentId/vote", async (req, res) => {
 router.post('/comments/:commentId/reply', async (req, res) => {
   try {
     const { commentId } = req.params;
-    const { body, author, handle, userDp } = req.body;
+    const { body, author, handle, userDp, imageUrl } = req.body;
 
     // Find the parent comment
     const parentComment = await Comment.findById(commentId);
@@ -325,6 +326,7 @@ router.post('/comments/:commentId/reply', async (req, res) => {
       userDp,
       post: parentComment.post, // Same post as parent
       parentComment: commentId, // Set parent comment reference
+      imageUrl,
     });
 
     const savedReply = await newReply.save();

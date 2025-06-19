@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Check, X, Loader } from "lucide-react";
+import "../styles/animations.css";
 
 const AdminApprovePosts = () => {
   const navigate = useNavigate();
@@ -257,14 +258,18 @@ const AdminApprovePosts = () => {
                         <p className="mt-1 text-gray-600">{post.description}</p>
                       </div>
                       {post.imageUrl && post.imageUrl.length > 0 && (
-                        <div className="mt-4">
-                          <img
-                            src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
-                            alt="Post content"
-                            className="max-h-60 rounded-lg object-contain"
-                          />
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
+                          {post.imageUrl.map((url, index) => (
+                            <img
+                              key={index}
+                              src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${url}`}
+                              alt={`Post image ${index + 1}`}
+                              className="max-h-60 w-full rounded-lg cards object-contain"
+                            />
+                          ))}
                         </div>
                       )}
+
                       <div className="mt-4 flex justify-end space-x-2">
                         {isFormOpen ? (
                           <div className="w-full">

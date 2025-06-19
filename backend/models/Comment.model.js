@@ -39,7 +39,12 @@
           ref: "User",
         },
       ],
-
+      imageUrl: [
+        {
+          type: String,
+          required: true
+        },
+      ],
       replies: [
         {
           type: mongoose.Schema.Types.ObjectId,

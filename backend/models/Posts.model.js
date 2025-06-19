@@ -12,7 +12,7 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 1000,
+      maxlength: 10000,
     },
     tags: [
       {
@@ -26,11 +26,7 @@ const postSchema = new mongoose.Schema(
         maxlength: 30,
       },
     ],
-    imageUrl: [
-      {
-        type: String, // stored as uploaded filename (e.g., "abc123.jpg")
-      },
-    ],
+    imageUrl: [String], // Should be array of strings
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -81,7 +77,7 @@ const postSchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: false, 
+      default: false,
     },
   },
   {

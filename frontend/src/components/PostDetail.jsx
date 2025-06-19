@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-
+import UserProfileCard from "./UserProfileCard";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -13,7 +13,11 @@ import {
   X,
   Loader2,
   Send,
+  ImagePlus,
+  Trash2, ChevronLeft, ChevronRight 
 } from "lucide-react";
+import { formatDate, handleClose as closeHandler } from "../utils/postUtils";
+import axios from "axios";
 
 const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const { state } = useLocation();
@@ -22,11 +26,10 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const [post, setPost] = useState(state?.post || null);
   const [user, setUser] = useState(state?.user || null);
   console.log(user);
-  
+
   const [deletingCommentId, setDeletingCommentId] = useState(null);
   const currentUserId = user?._id || user?.sub;
 
-  
   const [loading, setLoading] = useState(!post);
   const [voted, setVoted] = useState(null);
   const [newComment, setNewComment] = useState("");
@@ -39,61 +42,139 @@ const PostDetail = ({ isModal = false, backgroundLocation = null }) => {
   const [replyContent, setReplyContent] = useState("");
   const [commentVotes, setCommentVotes] = useState({});
   const [simulationActive, setSimulationActive] = useState(false);
-  const hoverTimeoutRef = useRef(null);
-const [isHoveringCard, setIsHoveringCard] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-useEffect(() => {
-  return () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
+  // Image upload states
+  const [commentImage, setCommentImage] = useState(null);
+  const [commentImagePreview, setCommentImagePreview] = useState(null);
+  const [replyImage, setReplyImage] = useState(null);
+  const [replyImagePreview, setReplyImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const hoverTimeoutRef = useRef(null);
+  const commentImageInputRef = useRef(null);
+  const replyImageInputRef = useRef(null);
+  const [isHoveringCard, setIsHoveringCard] = useState(false);
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart - touchEnd > 50) {
+      // Left swipe
+      nextImage();
+    } else if (touchEnd - touchStart > 50) {
+      // Right swipe
+      prevImage();
     }
   };
-}, []);
-  const UserProfileCard = ({ user, position }) => {
-    if (!user) return null;
 
-    return (
-      <div
-        className="fixed z-50 bg-[#161617] border border-[#1E1E1E] rounded-xl p-4 w-64 shadow-lg pointer-events-none"
-        style={{
-          top: position.top + 10,
-          left: Math.max(10, Math.min(position.left, window.innerWidth - 270)),
-        }}
-        onMouseEnter={() => {
-          setIsHoveringCard(true);
-          if (hoverTimeoutRef.current) {
-            clearTimeout(hoverTimeoutRef.current);
-          }
-        }}
-        onMouseLeave={() => {
-          setIsHoveringCard(false);
-          hoverTimeoutRef.current = setTimeout(() => {
-            setHoveredUser(null);
-          }, 300);
-        }}>
-        
-        <div className="flex flex-col items-center">
-          <img
-            className="w-16 h-16 rounded-full mb-3"
-            src={
-              user.userDp
-                ? `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${user.userDp}`
-                : "/default-avatar.png"
-            }
-            alt="avatar"
-            onError={(e) => {
-              e.target.src = "/default-avatar.png";
-            }}
-          />
-          <h3 className="text-white font-medium">n/{user.handle}</h3>
-          <button
-            onClick={() => console.log(`followed ${user.handle}`)}
-            className="mt-3 w-full py-1  text-white rounded-l border border-white font-medium hover:bg-[#AD49E1]/90 transition-colors pointer-events-auto">
-            Follow
-          </button>
-        </div>
-      </div>
+  // Add these functions for navigation
+  const nextImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === post.imageUrl.length - 1 ? 0 : prevIndex + 1
     );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? post.imageUrl.length - 1 : prevIndex - 1
+    );
+  };
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Image handling functions
+  const handleCommentImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setCommentImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setCommentImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleReplyImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setReplyImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setReplyImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeCommentImage = () => {
+    setCommentImage(null);
+    setCommentImagePreview(null);
+    if (commentImageInputRef.current) {
+      commentImageInputRef.current.value = "";
+    }
+  };
+
+  const removeReplyImage = () => {
+    setReplyImage(null);
+    setReplyImagePreview(null);
+    if (replyImageInputRef.current) {
+      replyImageInputRef.current.value = "";
+    }
+  };
+
+  const uploadImage = async (image) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", image);
+
+      const uploadResponse = await axios.post(
+        `http://localhost:3000/upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      const uploadedImageUrl = uploadResponse.data.downloadUrl;
+      console.log("Uploaded image URL:", uploadedImageUrl);
+
+      // Extract filename from URL
+      if (uploadedImageUrl && uploadedImageUrl.includes("uploads/")) {
+        const filename = uploadedImageUrl.split("uploads/")[1];
+        return filename;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+
+  const sortComments = (comments) => {
+    return [...comments].sort((a, b) => {
+      // Compare image presence first
+      const aHasImage = a.imageUrl && a.imageUrl.length > 0;
+      const bHasImage = b.imageUrl && b.imageUrl.length > 0;
+
+      if (aHasImage && !bHasImage) return -1;
+      if (!aHasImage && bHasImage) return 1;
+
+      // Then compare message length
+      if (a.body.length > b.body.length) return -1;
+      if (a.body.length < b.body.length) return 1;
+
+      // Finally sort by date (newest first)
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
   };
 
   // Fetch post and comments
@@ -152,46 +233,6 @@ useEffect(() => {
     };
   }, [simulationActive]);
 
-  const handleSavePost = async (postId) => {
-    if (!currentUser?._id) return;
-
-    const isCurrentlySaved = savedPosts.has(postId);
-    const newSavedPosts = new Set(savedPosts);
-
-    // Optimistic UI update
-    if (isCurrentlySaved) {
-      newSavedPosts.delete(postId);
-    } else {
-      newSavedPosts.add(postId);
-    }
-    setSavedPosts(newSavedPosts);
-
-    try {
-      const endpoint = isCurrentlySaved
-        ? "http://localhost:3000/api/users/unsave-post"
-        : "http://localhost:3000/api/users/save-post";
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: currentUser._id,
-          postId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to ${isCurrentlySaved ? "unsave" : "save"} post`
-        );
-      }
-    } catch (error) {
-      console.error(error);
-      // Revert on error
-      setSavedPosts(savedPosts);
-    }
-  };
-
   const handleDeleteComment = async (commentId, userHandle) => {
     // if (!window.confirm("Delete this comment and all its replies?")) return;
 
@@ -218,7 +259,6 @@ useEffect(() => {
       setDeletingCommentId(null);
     }
   };
-  
 
   const simulateComment = async () => {
     try {
@@ -241,31 +281,29 @@ useEffect(() => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "now";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "now";
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString();
-  };
-
   const handleReplySubmit = async (parentCommentId) => {
     if (!replyContent.trim() || !user || !post) return;
 
     try {
+      setUploadingImage(true);
+      let imageUrls = [];
+
+      // Upload image if selected
+      if (replyImage) {
+        const filename = await uploadImage(replyImage);
+
+        if (filename) {
+          imageUrls.push(filename);
+          console.log("pushed", filename);
+        }
+      }
+
       const replyData = {
         body: replyContent,
         author: user._id || user?.sub,
         handle: user?.handle || user?.userHandle || "Anonymous",
         userDp: user.profilePicture,
+        imageUrl: imageUrls,
       };
 
       const response = await fetch(
@@ -282,8 +320,67 @@ useEffect(() => {
       await fetchComments();
       setReplyContent("");
       setReplyingTo(null);
+      removeReplyImage();
     } catch (err) {
       console.error("Error posting reply:", err);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !user || !post) return;
+
+    try {
+      setIsCommenting(true);
+      setUploadingImage(true);
+      let imageUrls = [];
+
+      // Upload image if selected
+      if (commentImage) {
+        const filename = await uploadImage(commentImage);
+        if (filename) {
+          imageUrls.push(filename);
+        }
+      }
+
+      const commentData = {
+        body: newComment,
+        author: user?._id || user?.sub,
+        handle: user?.handle || user?.userHandle || "Anonymous",
+        userDp: user.profilePicture,
+        imageUrl: imageUrls,
+      };
+
+      console.log(commentData);
+
+      const response = await fetch(
+        `http://localhost:3000/api/posts/${post._id}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(commentData),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to post comment");
+
+      const savedComment = await response.json();
+      setComments((prev) => [
+        {
+          ...savedComment,
+          voteCount: 0,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+      setNewComment("");
+      removeCommentImage();
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    } finally {
+      setIsCommenting(false);
+      setUploadingImage(false);
     }
   };
 
@@ -311,6 +408,8 @@ useEffect(() => {
 
   const renderComment = (comment, depth = 0) => {
     const isReplying = replyingTo === comment._id;
+    
+  const sortedReplies = comment.replies ? sortComments(comment.replies) : [];
 
     return (
       <div
@@ -383,6 +482,28 @@ useEffect(() => {
 
             <p className="text-[#d7dadc] pl-11 mb-0.5 mr-2">{comment.body}</p>
 
+            {/* Comment Images */}
+            {comment.imageUrl && (
+              <div className="pl-11 mb-2 mt-1">
+                {comment.imageUrl.map((imageUrl, index) => (
+                  <div key={index} className="mb-2">
+                    <img
+                      src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${imageUrl}`}
+                      alt="Comment attachment"
+                      className="max-w-xs max-h-48 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onError={(e) => (e.target.style.display = "none")}
+                      onClick={() =>
+                        window.open(
+                          `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${imageUrl}`,
+                          "_blank"
+                        )
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="pl-11">
               <div className="pl-0 flex items-center gap-4 mt-0 text-sm text-[#818384]">
                 <button
@@ -395,33 +516,11 @@ useEffect(() => {
                   {isReplying ? "Cancel" : "Reply"}
                 </button>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleCommentVote(comment._id, "up")}
-                    className={`p-1.5 rounded-full transition-colors ${
-                      commentVotes[comment._id] === "up"
-                        ? "text-[#AD49E1] bg-[#AD49E1]/10"
-                        : "hover:bg-[#AD49E1]/10 hover:text-[#AD49E1]"
-                    }`}>
-                    <ChevronUp size={18} />
-                  </button>
-                  <span className="text-xs font-bold text-[#d7dadc]">
-                    {comment.voteCount || 0}
-                  </span>
-                  <button
-                    onClick={() => handleCommentVote(comment._id, "down")}
-                    className={`p-1.5 rounded-full transition-colors ${
-                      commentVotes[comment._id] === "down"
-                        ? "text-[#7193ff] bg-[#7193ff]/10"
-                        : "hover:bg-[#7193ff]/10 hover:text-[#7193ff]"
-                    }`}>
-                    <ChevronDown size={18} />
-                  </button>
-                </div>
-
                 {currentUserId === comment.author && (
                   <button
-                    onClick={() => handleDeleteComment(comment._id, user.handle)}
+                    onClick={() =>
+                      handleDeleteComment(comment._id, user.handle)
+                    }
                     disabled={deletingCommentId === comment._id}
                     className={`text-[#818384] hover:text-red-500 font-medium transition-colors ${
                       deletingCommentId === comment._id ? "animate-pulse" : ""
@@ -443,129 +542,73 @@ useEffect(() => {
                     placeholder="Write a reply..."
                     rows={3}
                   />
-                  <div className="flex justify-end mt-2">
+
+                  {/* Reply Image Preview */}
+                  {replyImagePreview && (
+                    <div className="mt-2 relative inline-block">
+                      <img
+                        src={replyImagePreview}
+                        alt="Reply preview"
+                        className="max-w-xs max-h-32 rounded-lg object-cover"
+                      />
+                      <button
+                        onClick={removeReplyImage}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={replyImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleReplyImageSelect}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => replyImageInputRef.current?.click()}
+                        className="flex items-center gap-1 text-[#818384] hover:text-[#AD49E1] transition-colors p-2 rounded-lg hover:bg-[#1E1E1E]">
+                        <ImagePlus size={16} />
+                        <span className="text-sm">Image</span>
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => handleReplySubmit(comment._id)}
-                      disabled={!replyContent.trim()}
+                      disabled={!replyContent.trim() || uploadingImage}
                       className={`flex items-center gap-2 font-medium py-1.5 px-5 rounded-full text-sm transition-all ${
-                        !replyContent.trim()
+                        !replyContent.trim() || uploadingImage
                           ? "bg-[#AD49E1]/50 cursor-not-allowed"
                           : "bg-[#AD49E1] hover:bg-[#AD49E1]/90"
                       }`}>
-                      <Send size={14} />
-                      Reply
+                      {uploadingImage ? (
+                        <>
+                          <Loader2 className="animate-spin h-4 w-4" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          Reply
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {comment.replies?.map((reply) => renderComment(reply, depth + 1))}
+            {sortedReplies.map((reply) => renderComment(reply, depth + 1))}
           </div>
         </div>
       </div>
     );
   };
 
-  const handleSubmitComment = async () => {
-    if (!newComment.trim() || !user || !post) return;
-
-    try {
-      setIsCommenting(true);
-      const commentData = {
-        body: newComment,
-        author: user?._id || user?.sub,
-        handle: user?.handle || user?.userHandle || "Anonymous",
-        userDp: user.profilePicture,
-      };
-
-      const response = await fetch(
-        `http://localhost:3000/api/posts/${post._id}/comments`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(commentData),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to post comment");
-
-      const savedComment = await response.json();
-      setComments((prev) => [
-        {
-          ...savedComment,
-          voteCount: 0,
-          createdAt: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
-      setNewComment("");
-    } catch (error) {
-      console.error("Error posting comment:", error);
-    } finally {
-      setIsCommenting(false);
-    }
-  };
-
-  const handleVote = async (voteType) => {
-    if (!user || !post) return;
-
-    try {
-      const currentVote = voted;
-      const currentCount = voteCount;
-      let newCount = currentCount;
-      let newVoteType = null;
-
-      if (currentVote === "up" && voteType === "up") {
-        newCount = currentCount - 1;
-      } else if (currentVote === "up" && voteType === "down") {
-        newCount = currentCount - 2;
-        newVoteType = "down";
-      } else if (currentVote === "down" && voteType === "up") {
-        newCount = currentCount + 2;
-        newVoteType = "up";
-      } else if (currentVote === "down" && voteType === "down") {
-        newCount = currentCount + 1;
-      } else if (!currentVote && voteType === "up") {
-        newCount = currentCount + 1;
-        newVoteType = "up";
-      } else if (!currentVote && voteType === "down") {
-        newCount = currentCount - 1;
-        newVoteType = "down";
-      }
-
-      setVoteCount(newCount);
-      setVoted(newVoteType);
-
-      await fetch(`http://localhost:3000/api/posts/${post._id}/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          voteType: newVoteType,
-          userId: user?._id || user?.sub,
-        }),
-      });
-    } catch (error) {
-      console.error("Error voting:", error);
-    }
-  };
-
-  const handleCommentVote = (commentId, voteType) => {
-    setCommentVotes((prev) => ({
-      ...prev,
-      [commentId]: prev[commentId] === voteType ? null : voteType,
-    }));
-  };
-
-  const handleClose = () => {
-    if (isModal && backgroundLocation) {
-      navigate(backgroundLocation.pathname + backgroundLocation.search, {
-        state: backgroundLocation.state,
-      });
-    } else {
-      navigate(-1);
-    }
-  };
+  const handleClose = () => closeHandler(isModal, backgroundLocation, navigate);
 
   if (loading) {
     return (
@@ -609,14 +652,14 @@ useEffect(() => {
       {isModal && (
         <div
           onClick={handleClose}
-          className="fixed inset-0 bg-[#AD49E1]/20 backdrop-blur-xs transition-opacity"
+          className="fixed inset-0 bg-[#AD49E1]/20 brightness-100 backdrop-blur-xs transition-opacity"
         />
       )}
 
       <div
         className={`relative ${
           isModal
-            ? "flex items-center justify-center min-h-screen sm:pt-20 pt-0"
+            ? "flex items-center justify-center min-h-screen sm:pt-20 sm:pb-10 pt-0"
             : ""
         }`}>
         <div
@@ -675,26 +718,96 @@ useEffect(() => {
               <p className="whitespace-pre-line">{post.description}</p>
             </div>
 
-            {post.imageUrl?.length > 0 && (
-              <div className="sm:mb-8 mb-2 sm:px-6 px-0 overflow-hidden sm:rounded-xl bg-black">
-                <img
-                  src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[0]}`}
-                  alt="Post content"
-                  className="w-full max-h-[70vh] object-contain"
-                  onError={(e) => (e.target.style.display = "none")}
-                />
+            {/* {post.imageUrl?.length > 0 && (
+              <div className="sm:mb-8 mb-2 sm:px-6 px-0 overflow-hidden">
+                <div
+                  className={`grid ${
+                    post.imageUrl.length === 1
+                      ? "grid-cols-1"
+                      : "grid-cols-1 sm:grid-cols-2"
+                  } gap-4`}>
+                  {post.imageUrl.map((image, index) => (
+                    <div
+                      key={index}
+                      className="overflow-hidden sm:rounded-xl bg-black flex items-center justify-center">
+                      <img
+                        src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${image}`}
+                        alt={`Post content ${index + 1}`}
+                        className="w-full max-h-[70vh] object-contain cursor-pointer"
+                        onError={(e) => (e.target.style.display = "none")}
+                        onClick={() =>
+                          window.open(
+                            `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${image}`,
+                            "_blank"
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+            )} */}
 
-            {post.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2 px-2 py-1 sm:mb-8 mb-2">
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-[#AD49E1]/10 text-[#AD49E1] px-3 py-1.5 rounded-full sm:text-sm text-xs font-medium">
-                    #{tag}
-                  </span>
-                ))}
+            {post.imageUrl?.length > 0 && (
+              <div className="sm:mb-8 mb-2 sm:px-6 px-0 overflow-hidden relative">
+                {/* Image container with swipe handlers */}
+                <div
+                  className="relative overflow-hidden sm:rounded-xl bg-black"
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}>
+                  {/* Navigation arrows */}
+                  {post.imageUrl.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 z-10 hidden sm:block"
+                        aria-label="Previous image">
+                        <ChevronLeft size={24} />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 z-10 hidden sm:block"
+                        aria-label="Next image">
+                        <ChevronRight size={24} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Current image */}
+                  <img
+                    src={`https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[currentImageIndex]}`}
+                    alt={`Post content ${currentImageIndex + 1} of ${
+                      post.imageUrl.length
+                    }`}
+                    className="w-full max-h-[70vh] object-contain cursor-pointer"
+                    onError={(e) => (e.target.style.display = "none")}
+                    onClick={() =>
+                      window.open(
+                        `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${post.imageUrl[currentImageIndex]}`,
+                        "_blank"
+                      )
+                    }
+                  />
+                </div>
+
+                {/* Dots navigation */}
+                {post.imageUrl.length > 1 && (
+                  <div className="flex justify-center mt-4 space-x-2">
+                    {post.imageUrl.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          index === currentImageIndex
+                            ? "bg-[#AD49E1]"
+                            : "bg-[#818384]"
+                        }`}
+                        aria-label={`Go to image ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -719,19 +832,54 @@ useEffect(() => {
                 className="w-full bg-[#0A0A0A] border border-[#1E1E1E] rounded-xl p-4 text-white min-h-[120px] placeholder-[#818384] focus:outline-none focus:border-[#AD49E1]/50 transition-colors"
                 placeholder="Share your thoughts..."
               />
-              <div className="flex justify-end mt-3">
+
+              {/* Comment Image Preview */}
+              {commentImagePreview && (
+                <div className="mt-3 relative inline-block">
+                  <img
+                    src={commentImagePreview}
+                    alt="Comment preview"
+                    className="max-w-xs max-h-48 rounded-lg object-cover"
+                  />
+                  <button
+                    onClick={removeCommentImage}
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors">
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center mt-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={commentImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCommentImageSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => commentImageInputRef.current?.click()}
+                    className="flex items-center gap-2 text-[#818384] hover:text-[#AD49E1] transition-colors p-2 rounded-lg hover:bg-[#1E1E1E]">
+                    <ImagePlus size={18} />
+                    <span className="text-sm">Add Image</span>
+                  </button>
+                </div>
+
                 <button
                   onClick={handleSubmitComment}
-                  disabled={isCommenting || !newComment.trim()}
+                  disabled={
+                    isCommenting || !newComment.trim() || uploadingImage
+                  }
                   className={`flex items-center gap-2 font-medium cursor-pointer py-2 px-6 rounded-full transition-all ${
-                    isCommenting || !newComment.trim()
+                    isCommenting || !newComment.trim() || uploadingImage
                       ? "bg-[#AD49E1]/50 cursor-not-allowed"
                       : "bg-[#AD49E1] hover:bg-[#AD49E1]/90"
                   }`}>
-                  {isCommenting ? (
+                  {isCommenting || uploadingImage ? (
                     <>
                       <Loader2 className="animate-spin h-4 w-4" />
-                      Posting...
+                      {uploadingImage ? "Uploading..." : "Posting..."}
                     </>
                   ) : (
                     <>
@@ -748,7 +896,9 @@ useEffect(() => {
           <div className="border-t p-3 border-[#1E1E1E]">
             {comments.length > 0 ? (
               <div className="divide-y divide-[#1E1E1E]">
-                {comments.map((comment) => renderComment(comment))}
+                {sortComments(comments).map((comment) =>
+                  renderComment(comment)
+                )}
               </div>
             ) : (
               <div className="py-12 text-center">
