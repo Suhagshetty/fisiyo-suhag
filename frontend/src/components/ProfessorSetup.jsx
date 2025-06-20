@@ -294,10 +294,10 @@ const ProfessorSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#AD49E1]/5 via-white to-[#AD49E1]/8">
+    <div className="min-h-screen bg-gradient-to-b from-[#49B8E1]/5 via-white to-[#49B8E1]/8">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute w-64 h-64 bg-gradient-to-r from-[#AD49E1]/10 to-transparent rounded-full blur-3xl"
+          className="absolute w-64 h-64 bg-gradient-to-r from-[#49B8E1]/10 to-transparent rounded-full blur-3xl"
           style={{
             animation: "float 25s ease-in-out infinite",
             left: "20%",
@@ -305,7 +305,7 @@ const ProfessorSetup = () => {
           }}
         />
         <div
-          className="absolute w-96 h-96 bg-gradient-to-l from-[#AD49E1]/8 to-transparent rounded-full blur-3xl"
+          className="absolute w-96 h-96 bg-gradient-to-l from-[#49B8E1]/8 to-transparent rounded-full blur-3xl"
           style={{
             animation: "float 30s ease-in-out infinite reverse",
             right: "15%",
@@ -321,7 +321,7 @@ const ProfessorSetup = () => {
             className="text-4xl lg:text-6xl font-light text-[#12261D] mb-6 tracking-tight"
             style={{ fontFamily: "Playfair Display, serif" }}>
             Professor{" "}
-            <span className="text-[#AD49E1] font-normal">Profile</span> Setup
+            <span className="text-[#49B8E1] font-normal">Profile</span> Setup
           </h1>
 
           {currentStep === "academic" && (
@@ -350,33 +350,33 @@ const ProfessorSetup = () => {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === "academic"
-                  ? "bg-[#AD49E1] text-white"
+                  ? "bg-[#49B8E1] text-white"
                   : "bg-gray-200 text-gray-500"
               }`}>
               1
             </div>
             <div
               className={`h-1 w-16 ${
-                currentStep === "academic" ? "bg-gray-300" : "bg-[#AD49E1]"
+                currentStep === "academic" ? "bg-gray-300" : "bg-[#49B8E1]"
               }`}></div>
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === "personal"
-                  ? "bg-[#AD49E1] text-white"
+                  ? "bg-[#49B8E1] text-white"
                   : currentStep === "interests"
-                  ? "bg-[#AD49E1] text-white"
+                  ? "bg-[#49B8E1] text-white"
                   : "bg-gray-200 text-gray-500"
               }`}>
               2
             </div>
             <div
               className={`h-1 w-16 ${
-                currentStep === "interests" ? "bg-[#AD49E1]" : "bg-gray-300"
+                currentStep === "interests" ? "bg-[#49B8E1]" : "bg-gray-300"
               }`}></div>
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === "interests"
-                  ? "bg-[#AD49E1] text-white"
+                  ? "bg-[#49B8E1] text-white"
                   : "bg-gray-200 text-gray-500"
               }`}>
               3
@@ -398,7 +398,7 @@ const ProfessorSetup = () => {
               {/* Institution Name */}
               {/* <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Building className="w-4 h-4 text-[#AD49E1]" />
+                  <Building className="w-4 h-4 text-[#49B8E1]" />
                   Institution Name
                 </label>
                 <input
@@ -410,13 +410,13 @@ const ProfessorSetup = () => {
                       institutionName: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Your university or institution"
                 />
               </div> */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Building className="w-4 h-4 text-[#AD49E1]" />
+                  <Building className="w-4 h-4 text-[#49B8E1]" />
                   Institution Name
                 </label>
                 <div className="relative">
@@ -429,7 +429,7 @@ const ProfessorSetup = () => {
                         institutionName: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                     placeholder="Search your university or institution"
                   />
 
@@ -463,7 +463,7 @@ const ProfessorSetup = () => {
               {/* Department */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <GraduationCap className="w-4 h-4 text-[#AD49E1]" />
+                  <GraduationCap className="w-4 h-4 text-[#49B8E1]" />
                   Department
                 </label>
                 <input
@@ -472,14 +472,14 @@ const ProfessorSetup = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, department: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Your department"
                 />
               </div>
               {/* Professor ID */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Briefcase className="w-4 h-4 text-[#AD49E1]" />
+                  <Briefcase className="w-4 h-4 text-[#49B8E1]" />
                   Professor ID
                 </label>
                 <input
@@ -488,14 +488,14 @@ const ProfessorSetup = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, professorId: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Your institution ID"
                 />
               </div>
               {/* Institution Email */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Mail className="w-4 h-4 text-[#AD49E1]" />
+                  <Mail className="w-4 h-4 text-[#49B8E1]" />
                   Institution Email
                 </label>
                 <input
@@ -507,14 +507,14 @@ const ProfessorSetup = () => {
                       institutionEmail: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="your.email@institution.edu"
                 />
               </div>
               {/* Years of Experience */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Calendar className="w-4 h-4 text-[#AD49E1]" />
+                  <Calendar className="w-4 h-4 text-[#49B8E1]" />
                   Years of Experience
                 </label>
                 <input
@@ -528,14 +528,14 @@ const ProfessorSetup = () => {
                       yearsOfExperience: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Number of years"
                 />
               </div>
               {/* Designation */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <User className="w-4 h-4 text-[#AD49E1]" />
+                  <User className="w-4 h-4 text-[#49B8E1]" />
                   Designation
                 </label>
                 <input
@@ -544,14 +544,14 @@ const ProfessorSetup = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, designation: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Your position/title"
                 />
               </div>
               {/* Institution Address */}
               <div className="space-y-2 md:col-span-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <MapPin className="w-4 h-4 text-[#AD49E1]" />
+                  <MapPin className="w-4 h-4 text-[#49B8E1]" />
                   Institution Address
                 </label>
                 <input
@@ -563,7 +563,7 @@ const ProfessorSetup = () => {
                       institutionAddress: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Institution's full address"
                 />
               </div>
@@ -582,7 +582,7 @@ const ProfessorSetup = () => {
                     onChange={handleProfilePictureChange}
                     className="hidden"
                   />
-                  <div className="relative w-32 h-32 rounded-full border-4 border-[#AD49E1]/20 overflow-hidden bg-gray-100">
+                  <div className="relative w-32 h-32 rounded-full border-4 border-[#49B8E1]/20 overflow-hidden bg-gray-100">
                     {profilePicturePreview ? (
                       <>
                         <img
@@ -606,7 +606,7 @@ const ProfessorSetup = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 bg-[#AD49E1] text-white p-2 rounded-full hover:bg-[#AD49E1]/80 transition-colors">
+                    className="absolute bottom-0 right-0 bg-[#49B8E1] text-white p-2 rounded-full hover:bg-[#49B8E1]/80 transition-colors">
                     <Camera size={16} />
                   </button>
                 </div>
@@ -616,7 +616,7 @@ const ProfessorSetup = () => {
                 {/* Name Field */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <User className="w-4 h-4 text-[#AD49E1]" />
+                    <User className="w-4 h-4 text-[#49B8E1]" />
                     Full Name
                   </label>
                   <input
@@ -625,14 +625,14 @@ const ProfessorSetup = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                     placeholder="Enter your full name"
                   />
                 </div>
                 {/* Handle Field */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <UserCheck className="w-4 h-4 text-[#AD49E1]" />
+                    <UserCheck className="w-4 h-4 text-[#49B8E1]" />
                     Username Handle
                   </label>
                   <div className="relative">
@@ -643,7 +643,7 @@ const ProfessorSetup = () => {
                       type="text"
                       value={formData.handle}
                       onChange={handleHandleChange}
-                      className="w-full pl-8 pr-10 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                      className="w-full pl-8 pr-10 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                       placeholder="your_handle"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -668,7 +668,7 @@ const ProfessorSetup = () => {
                 {/* Gender Field */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Users className="w-4 h-4 text-[#AD49E1]" />
+                    <Users className="w-4 h-4 text-[#49B8E1]" />
                     Gender
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -680,8 +680,8 @@ const ProfessorSetup = () => {
                         className={`px-4 py-2 rounded-lg border transition-all text-sm
                           ${
                             formData.gender === gender
-                              ? "border-[#AD49E1] bg-[#AD49E1]/10 text-[#AD49E1]"
-                              : "border-gray-200 bg-white/80 text-gray-600 hover:border-[#AD49E1]/50"
+                              ? "border-[#49B8E1] bg-[#49B8E1]/10 text-[#49B8E1]"
+                              : "border-gray-200 bg-white/80 text-gray-600 hover:border-[#49B8E1]/50"
                           }`}>
                         {gender}
                       </button>
@@ -691,7 +691,7 @@ const ProfessorSetup = () => {
                 {/* Age Field */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Calendar className="w-4 h-4 text-[#AD49E1]" />
+                    <Calendar className="w-4 h-4 text-[#49B8E1]" />
                     Age
                   </label>
                   <input
@@ -702,7 +702,7 @@ const ProfessorSetup = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, age: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                     placeholder="Enter your age"
                   />
                 </div>
@@ -772,7 +772,7 @@ const ProfessorSetup = () => {
                           position: "absolute",
                           whiteSpace: "nowrap",
                           ...positions[index],
-                          color: isSelected ? "#AD49E1" : "#DFE6E9",
+                          color: isSelected ? "#49B8E1" : "#DFE6E9",
                           fontFamily: fonts[index],
                           fontWeight: [2, 5, 7, 11].includes(index) ? 900 : 400,
                           fontStyle: [3, 9, 14].includes(index)
@@ -797,7 +797,7 @@ const ProfessorSetup = () => {
                       (_, i) => (
                         <div
                           key={i}
-                          className="w-2 h-2 rounded-full bg-[#AD49E1]"
+                          className="w-2 h-2 rounded-full bg-[#49B8E1]"
                         />
                       )
                     )}
@@ -834,7 +834,7 @@ const ProfessorSetup = () => {
                     formData.professorId &&
                     formData.institutionEmail &&
                     formData.yearsOfExperience
-                      ? "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20 cursor-pointer"
+                      ? "border-[#49B8E1] bg-[#49B8E1]/10 hover:bg-[#49B8E1]/20 cursor-pointer"
                       : "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
                   }`}
                 style={{
@@ -848,7 +848,7 @@ const ProfessorSetup = () => {
                     formData.professorId &&
                     formData.institutionEmail &&
                     formData.yearsOfExperience
-                      ? "group-hover:text-[#AD49E1]"
+                      ? "group-hover:text-[#49B8E1]"
                       : ""
                   }`}>
                   Continue to Personal Info
@@ -879,7 +879,7 @@ const ProfessorSetup = () => {
                     handleAvailable !== false &&
                     !handleChecking &&
                     profilePicturePreview
-                      ? "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20 cursor-pointer"
+                      ? "border-[#49B8E1] bg-[#49B8E1]/10 hover:bg-[#49B8E1]/20 cursor-pointer"
                       : "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
                   }`}
                 style={{
@@ -895,7 +895,7 @@ const ProfessorSetup = () => {
                     formData.age &&
                     handleAvailable !== false &&
                     !handleChecking
-                      ? "group-hover:text-[#AD49E1]"
+                      ? "group-hover:text-[#49B8E1]"
                       : ""
                   }`}>
                   Continue to Interests
@@ -910,7 +910,7 @@ const ProfessorSetup = () => {
                 className={`group inline-flex items-center justify-center px-10 py-4 rounded-xl border transition-all duration-300 ${
                   isUploading
                     ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
-                    : "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20"
+                    : "border-[#49B8E1] bg-[#49B8E1]/10 hover:bg-[#49B8E1]/20"
                 }`}
                 style={{
                   fontFamily: "Playfair Display, serif",
@@ -918,7 +918,7 @@ const ProfessorSetup = () => {
                 }}>
                 <span
                   className={`text-lg font-medium transition-colors ${
-                    !isUploading ? "group-hover:text-[#AD49E1]" : ""
+                    !isUploading ? "group-hover:text-[#49B8E1]" : ""
                   }`}>
                   {isUploading ? "Creating Profile..." : "Complete Profile"}
                 </span>
@@ -949,7 +949,7 @@ const ProfessorSetup = () => {
           filter: brightness(1.05);
         }
         .interest-word.selected {
-          color: #ad49e1 !important;
+          color: #49B8E1 !important;
           font-weight: 700 !important;
         }
       `}</style>

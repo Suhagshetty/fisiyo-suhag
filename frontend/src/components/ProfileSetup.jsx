@@ -266,10 +266,10 @@ const ProfileSetup = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#AD49E1]/5 via-white to-[#AD49E1]/8">
+    <div className="min-h-screen bg-gradient-to-b from-[#49B8E1]/5 via-white to-[#49B8E1]/8">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute w-64 h-64 bg-gradient-to-r from-[#AD49E1]/10 to-transparent rounded-full blur-3xl"
+          className="absolute w-64 h-64 bg-gradient-to-r from-[#49B8E1]/10 to-transparent rounded-full blur-3xl"
           style={{
             animation: "float 25s ease-in-out infinite",
             left: "20%",
@@ -277,7 +277,7 @@ const ProfileSetup = () => {
           }}
         />
         <div
-          className="absolute w-96 h-96 bg-gradient-to-l from-[#AD49E1]/8 to-transparent rounded-full blur-3xl"
+          className="absolute w-96 h-96 bg-gradient-to-l from-[#49B8E1]/8 to-transparent rounded-full blur-3xl"
           style={{
             animation: "float 30s ease-in-out infinite reverse",
             right: "15%",
@@ -294,11 +294,11 @@ const ProfileSetup = () => {
               className="text-4xl lg:text-6xl font-light text-[#12261D] mb-6 tracking-tight"
               style={{ fontFamily: "Playfair Display, serif" }}>
               Welcome to the{" "}
-              <span className="text-[#AD49E1] font-normal">Elite</span>{" "}
+              <span className="text-[#49B8E1] font-normal">Elite</span>{" "}
               Scientific Community,{" "}
               {user.name && (
                 <span
-                  className="text-[#AD49E1]"
+                  className="text-[#49B8E1]"
                   style={{ fontFamily: "Merriweather italic" }}>
                   {user.name}
                 </span>
@@ -336,16 +336,16 @@ const ProfileSetup = () => {
                     className={`group flex flex-col items-center justify-center p-26 rounded-xl border transition-all cursor-pointer
         ${
           isSelected
-            ? "border-[#AD49E1] bg-[#AD49E1]/10"
+            ? "border-[#49B8E1] bg-[#49B8E1]/10"
             : "border-gray-300 bg-white"
         }
-        hover:border-[#AD49E1]/60
-        hover:text-[#AD49E1]
+        hover:border-[#49B8E1]/60
+        hover:text-[#49B8E1]
         hover:shadow-md`}>
                     <div
                       className={`mb-3 text-gray-600 transition-colors 
-          ${isSelected ? "text-[#AD49E1]" : ""}
-          group-hover:text-[#AD49E1]`}>
+          ${isSelected ? "text-[#49B8E1]" : ""}
+          group-hover:text-[#49B8E1]`}>
                       {icon}
                     </div>
                     <span className="text-lg font-medium text-center">
@@ -368,7 +368,7 @@ const ProfileSetup = () => {
                 className="text-3xl lg:text-5xl font-light text-[#12261D] mb-4 tracking-tight"
                 style={{ fontFamily: "Playfair Display, serif" }}>
                 Tell us about{" "}
-                <span className="text-[#AD49E1] font-normal">yourself</span>
+                <span className="text-[#49B8E1] font-normal">yourself</span>
               </h2>
               <p
                 className="text-gray-600 text-lg"
@@ -387,7 +387,7 @@ const ProfileSetup = () => {
                   onChange={handleProfilePictureChange}
                   className="hidden"
                 />
-                <div className="relative w-32 h-32 rounded-full border-4 border-[#AD49E1]/20 overflow-hidden bg-gray-100">
+                <div className="relative w-32 h-32 rounded-full border-4 border-[#49B8E1]/20 overflow-hidden bg-gray-100">
                   {profilePicturePreview ? (
                     <>
                       <img
@@ -411,7 +411,7 @@ const ProfileSetup = () => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 bg-[#AD49E1] text-white p-2 rounded-full hover:bg-[#AD49E1]/80 transition-colors">
+                  className="absolute bottom-0 right-0 bg-[#49B8E1] text-white p-2 rounded-full hover:bg-[#49B8E1]/80 transition-colors">
                   <Camera size={16} />
                 </button>
               </div>
@@ -421,7 +421,7 @@ const ProfileSetup = () => {
               {/* Name Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <User className="w-4 h-4 text-[#AD49E1]" />
+                  <User className="w-4 h-4 text-[#49B8E1]" />
                   Full Name
                 </label>
                 <input
@@ -430,7 +430,7 @@ const ProfileSetup = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Enter your full name"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 />
@@ -438,7 +438,7 @@ const ProfileSetup = () => {
               {/* Handle Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <UserCheck className="w-4 h-4 text-[#AD49E1]" />
+                  <UserCheck className="w-4 h-4 text-[#49B8E1]" />
                   Username Handle
                 </label>
                 <div className="relative">
@@ -449,7 +449,7 @@ const ProfileSetup = () => {
                     type="text"
                     value={formData.handle}
                     onChange={handleHandleChange}
-                    className="w-full pl-8 pr-10 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                    className="w-full pl-8 pr-10 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                     placeholder="your_handle"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   />
@@ -475,7 +475,7 @@ const ProfileSetup = () => {
               {/* Gender Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Users className="w-4 h-4 text-[#AD49E1]" />
+                  <Users className="w-4 h-4 text-[#49B8E1]" />
                   Gender
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -487,8 +487,8 @@ const ProfileSetup = () => {
                       className={`px-4 py-2 rounded-lg border transition-all text-sm
                         ${
                           formData.gender === gender
-                            ? "border-[#AD49E1] bg-[#AD49E1]/10 text-[#AD49E1]"
-                            : "border-gray-200 bg-white/80 text-gray-600 hover:border-[#AD49E1]/50"
+                            ? "border-[#49B8E1] bg-[#49B8E1]/10 text-[#49B8E1]"
+                            : "border-gray-200 bg-white/80 text-gray-600 hover:border-[#49B8E1]/50"
                         }`}
                       style={{ fontFamily: "Manrope, sans-serif" }}>
                       {gender}
@@ -499,7 +499,7 @@ const ProfileSetup = () => {
               {/* Age Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Calendar className="w-4 h-4 text-[#AD49E1]" />
+                  <Calendar className="w-4 h-4 text-[#49B8E1]" />
                   Age
                 </label>
                 <input
@@ -510,7 +510,7 @@ const ProfileSetup = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, age: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Enter your age"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 />
@@ -540,7 +540,7 @@ const ProfileSetup = () => {
         handleAvailable !== false &&
         !handleChecking &&
         profilePicturePreview
-          ? "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20 cursor-pointer"
+          ? "border-[#49B8E1] bg-[#49B8E1]/10 hover:bg-[#49B8E1]/20 cursor-pointer"
           : "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
       }`}
                 style={{
@@ -556,7 +556,7 @@ const ProfileSetup = () => {
                     formData.age &&
                     handleAvailable !== false &&
                     !handleChecking
-                      ? "group-hover:text-[#AD49E1]"
+                      ? "group-hover:text-[#49B8E1]"
                       : ""
                   }`}>
                   Continue to Interests
@@ -577,7 +577,7 @@ const ProfileSetup = () => {
                   className="mb-4 text-center text-2xl sm:text-6xl font-light tracking-tight"
                   style={{ fontFamily: "Playfair Display, serif" }}>
                   Choose your{" "}
-                  <span className="text-[#AD49E1] font-bold">interests</span>
+                  <span className="text-[#49B8E1] font-bold">interests</span>
                 </h2>
                 <p
                   className="text-gray-600 text-lg mt-4"
@@ -644,7 +644,7 @@ const ProfileSetup = () => {
                         position: "absolute",
                         whiteSpace: "nowrap",
                         ...positions[index],
-                        color: isSelected ? "#AD49E1" : "#DFE6E9",
+                        color: isSelected ? "#49B8E1" : "#DFE6E9",
                         fontFamily: fonts[index],
                         fontWeight: [2, 5, 7, 11].includes(index) ? 900 : 400,
                         fontStyle: [3, 9, 14].includes(index)
@@ -671,7 +671,7 @@ const ProfileSetup = () => {
                     (_, i) => (
                       <div
                         key={i}
-                        className="w-2 h-2 rounded-full bg-[#AD49E1]"
+                        className="w-2 h-2 rounded-full bg-[#49B8E1]"
                       />
                     )
                   )}
@@ -695,7 +695,7 @@ const ProfileSetup = () => {
                   className={`group inline-flex items-center justify-center px-10 py-4 rounded-xl border transition-all duration-300 ${
                     isUploading
                       ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
-                      : "border-[#AD49E1] bg-[#AD49E1]/10 hover:bg-[#AD49E1]/20"
+                      : "border-[#49B8E1] bg-[#49B8E1]/10 hover:bg-[#49B8E1]/20"
                   }`}
                   style={{
                     fontFamily: "Playfair Display, serif",
@@ -703,7 +703,7 @@ const ProfileSetup = () => {
                   }}>
                   <span
                     className={`text-lg font-medium transition-colors ${
-                      !isUploading ? "group-hover:text-[#AD49E1]" : ""
+                      !isUploading ? "group-hover:text-[#49B8E1]" : ""
                     }`}>
                     {isUploading ? "Creating Profile..." : "Complete Profile"}
                   </span>
@@ -735,7 +735,7 @@ const ProfileSetup = () => {
           filter: brightness(1.05);
         }
         .interest-word.selected {
-          color: #ad49e1 !important;
+          color: #49B8E1 !important;
           font-weight: 700 !important;
         }
       `}</style>
