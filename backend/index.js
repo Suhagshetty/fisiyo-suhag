@@ -5,6 +5,7 @@ import userRoutes from "./routes/users.js";
 import postRoutes from "./routes/createPost.js"
 import commintyRoutes from "./routes/communities.js"
 import pollRoutes from "./routes/Poll.js"
+import ProfessorRoutes from "./routes/professor.js"
 import NotificationRoutes from "./routes/notification.js"
 
 import multer from "multer";
@@ -30,6 +31,7 @@ app.use("/api", postRoutes);
 app.use("/api/communities", commintyRoutes);
 app.use("/api/polls", pollRoutes);
 app.use("/api/notifications", NotificationRoutes);
+app.use("/api/professors", ProfessorRoutes);
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 

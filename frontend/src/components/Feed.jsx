@@ -25,6 +25,8 @@ const Feed = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentUser] = useState(location.state?.user || null);
+  console.log(currentUser);
+  
   const dropdownRef = useRef(null);
 
   const {

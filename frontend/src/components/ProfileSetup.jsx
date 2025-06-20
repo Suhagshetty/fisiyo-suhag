@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const ProfileSetup = () => {
-  const { user } = useAuth0();
+  const { user, isLoading } = useAuth0();
   console.log(user);
 
   const [formData, setFormData] = useState({
@@ -115,11 +115,6 @@ const ProfileSetup = () => {
     }
   };
 
-  // const handleRoleSelect = (role) => {
-  //   setFormData({ ...formData, role });
-  //   setCurrentStep("personal");
-  // };
-
   const handlePersonalInfoNext = () => {
     if (formData.name && formData.handle && formData.gender && formData.age) {
       setCurrentStep("interests");
@@ -202,9 +197,10 @@ const ProfileSetup = () => {
         handle: formData.handle,
         gender: formData.gender,
         age: parseInt(formData.age),
-        role: formData.role === "Explorer" 
-        ? "explorer" 
-        : formData.role.toLowerCase(),
+        role:
+          formData.role === "Explorer"
+            ? "explorer"
+            : formData.role.toLowerCase(),
         interests: formData.interests,
         profilePicture: profilePictureUrl, // Add profile picture URL
       };
@@ -247,12 +243,18 @@ const ProfileSetup = () => {
   };
 
   const handleRoleSelect = (role) => {
+    if (isLoading || !user) return; // Wait for user to load
     setFormData({ ...formData, role });
 
     if (role === "Student/Enthu") {
       navigate("/student-setup", { state: { role } });
     } else if (role === "Professor") {
-      navigate("/professor-setup", { state: { role } });
+      navigate("/professor-setup", {
+        state: {
+          role,
+          authUser: user, // Pass auth0 user object
+        },
+      });
     } else {
       // For Explorer, just move to next step
       setCurrentStep("personal");

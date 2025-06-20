@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
-
 const professorSchema = new mongoose.Schema(
   {
-    // Base user fields
+    // Base user fields (unchanged)
     userid: { type: String, required: true, trim: true },
     name: { type: String, required: true, trim: true },
     email: {
@@ -94,44 +93,38 @@ const professorSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
 
     // Professor-specific fields
-    institutionName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    department: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    professorId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    institutionEmail: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      match: [/.+\.edu$/, "Institution email must end with .edu"],
-    },
-    yearsOfExperience: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    designation: {
-      type: String,
-      trim: true,
-    },
-    institutionAddress: {
-      type: String,
-      trim: true,
+    institution: {
+      name: { type: String, required: true, trim: true },
+      department: { type: String, required: true, trim: true },
+      id: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+      },
+      email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        match: [/.+\.edu$/, "Institution email must end with .edu"],
+      },
+      yearsOfExperience: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      designation: {
+        type: String,
+        trim: true,
+      },
+      address: {
+        type: String,
+        trim: true,
+      },
     },
   },
-  { timestamps: false }
+  { timestamps: true } // Enable built-in timestamps
 );
 
 // Update timestamp pre-save hook
