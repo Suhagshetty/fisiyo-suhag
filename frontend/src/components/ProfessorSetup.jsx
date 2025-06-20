@@ -22,16 +22,16 @@ import {
 import axios from "axios";
 
 const ProfessorSetup = () => {
-  
   const location = useLocation();
   const { formData: initialFormData, authUser } = location.state || {}; // Get authUser from state
   const navigate = useNavigate();
   const { user } = useAuth0();
+  const [collegeOptions, setCollegeOptions] = useState([]);
+  const [isLoadingColleges, setIsLoadingColleges] = useState(false);
 
   // Use authUser if available, otherwise use Auth0 user
   const currentUser = authUser || user;
   console.log("user", user);
-  
 
   const [currentStep, setCurrentStep] = useState("academic"); // academic -> personal -> interests
   const [formData, setFormData] = useState({
@@ -50,9 +50,6 @@ const ProfessorSetup = () => {
     interests: [],
     profilePicture: null,
   });
-
-
-  
 
   const scienceTopics = [
     "Quantum Physics",
@@ -80,6 +77,29 @@ const ProfessorSetup = () => {
   const [handleAvailable, setHandleAvailable] = useState(null);
   const [handleChecking, setHandleChecking] = useState(false);
   const [handleDebounceTimer, setHandleDebounceTimer] = useState(null);
+
+  // College search implementation in ProfessorSetup.jsx
+  useEffect(() => {
+    const fetchColleges = async () => {
+      if (formData.institutionName.length >= 2) {
+        setIsLoadingColleges(true);
+        try {
+          const response = await axios.get(
+            `http://localhost:3000/api/colleges?search=${formData.institutionName}`
+          );
+          setCollegeOptions(response.data);
+        } catch (error) {
+          console.error("Error fetching colleges:", error);
+        }
+        setIsLoadingColleges(false);
+      } else {
+        setCollegeOptions([]);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchColleges, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [formData.institutionName]);
 
   useEffect(() => {
     return () => {
@@ -215,7 +235,6 @@ const ProfessorSetup = () => {
         }
       }
 
-
       const payload = {
         userid: userId,
         name: formData.name,
@@ -236,7 +255,7 @@ const ProfessorSetup = () => {
           address: formData.institutionAddress,
         },
       };
-      
+
       console.log("Payload being sent:", payload);
 
       const response = await fetch("http://localhost:3000/api/professors", {
@@ -377,7 +396,7 @@ const ProfessorSetup = () => {
           {currentStep === "academic" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Institution Name */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <Building className="w-4 h-4 text-[#AD49E1]" />
                   Institution Name
@@ -394,6 +413,51 @@ const ProfessorSetup = () => {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Your university or institution"
                 />
+              </div> */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Building className="w-4 h-4 text-[#AD49E1]" />
+                  Institution Name
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.institutionName}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        institutionName: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AD49E1] focus:ring-2 focus:ring-[#AD49E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                    placeholder="Search your university or institution"
+                  />
+
+                  {isLoadingColleges && (
+                    <div className="absolute right-3 top-3.5">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    </div>
+                  )}
+
+                  {collegeOptions.length > 0 && !isLoadingColleges && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {collegeOptions.map((college, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              institutionName: college,
+                            });
+                            setCollegeOptions([]);
+                          }}>
+                          {college}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Department */}
@@ -412,7 +476,6 @@ const ProfessorSetup = () => {
                   placeholder="Your department"
                 />
               </div>
-
               {/* Professor ID */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -429,7 +492,6 @@ const ProfessorSetup = () => {
                   placeholder="Your institution ID"
                 />
               </div>
-
               {/* Institution Email */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -449,7 +511,6 @@ const ProfessorSetup = () => {
                   placeholder="your.email@institution.edu"
                 />
               </div>
-
               {/* Years of Experience */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -471,7 +532,6 @@ const ProfessorSetup = () => {
                   placeholder="Number of years"
                 />
               </div>
-
               {/* Designation */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -488,7 +548,6 @@ const ProfessorSetup = () => {
                   placeholder="Your position/title"
                 />
               </div>
-
               {/* Institution Address */}
               <div className="space-y-2 md:col-span-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
