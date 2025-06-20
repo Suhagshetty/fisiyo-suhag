@@ -40,7 +40,7 @@ const ProfileSetup = () => {
   const [handleDebounceTimer, setHandleDebounceTimer] = useState(null);
   const navigate = useNavigate();
 
-  const roles = ["Student/Enthu", "Professor", "Moderator"];
+  const roles = ["Student/Enthu", "Professor", "Explorer"];
   const genders = ["male", "female", "other", "prefer not to say"];
   const scienceTopics = [
     "Quantum Physics",
@@ -250,8 +250,8 @@ const ProfileSetup = () => {
         return "user";
       case "Professor":
         return "professor";
-      case "Moderator":
-        return "moderator";
+      case "Explorer":
+        return "explorer";
       default:
         return "user";
     }

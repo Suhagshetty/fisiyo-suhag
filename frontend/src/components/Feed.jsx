@@ -184,7 +184,7 @@ const Feed = () => {
                     )}
                   </div>
 
-                  {polls.map((poll) => (
+                  {/* {polls.map((poll) => (
                     <Poll
                       key={poll.id}
                       poll={poll}
@@ -195,7 +195,7 @@ const Feed = () => {
                       savedPosts={savedPosts}
                       handleSavePost={handleSavePost}
                     />
-                  ))}
+                  ))} */}
 
                   {/* Filtered Posts */}
                   {filteredPosts.map((post) => {
