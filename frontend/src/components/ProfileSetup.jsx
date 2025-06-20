@@ -244,16 +244,14 @@ const ProfileSetup = () => {
     }
   };
 
-  const mapRole = (displayedRole) => {
-    switch (displayedRole) {
-      case "Student/Enthu":
-        return "user";
-      case "Professor":
-        return "professor";
-      case "Explorer":
-        return "explorer";
-      default:
-        return "user";
+  const mapRole = (role) => {
+    setFormData({ ...formData, role });
+    if (role === "Student/Enthu") {
+      navigate("/student-setup", { state: { role } });
+    } else if (role === "Professor") {
+      navigate("/professor-setup", { state: { role } });
+    } else {
+      return "explorer";
     }
   };
 

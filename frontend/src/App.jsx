@@ -16,6 +16,7 @@ import CreateDiscussion from "./components/CreateDiscussion";
 import ProfilePage from "./components/ProfilePage";
 import PollDetail from "./components/PollDetail";
 import AdminApprovePosts from "./components/AdminApprovePosts";
+import ProfessorSetup from "./components/ProfessorSetup";
 import NotificationSection from "./components/NotificationSection";
 
 function App() {
@@ -40,7 +41,8 @@ function App() {
         <Route path="/c/:name" element={<CommunityPage />} />
         <Route path="/n/:name" element={<ProfilePage />} />
         <Route path="/admin/approve-posts" element={<AdminApprovePosts />} />
-        {/* <Route path="/notifications" element={<NotificationSection />} /> */}
+        <Route path="/professor-setup" element={<ProfessorSetup />} />
+        {/* <Route path="/student-setup" element={<StudentSetup />} /> */}
       </Routes>
 
       {/* Modal routes - only render when modal state is present */}

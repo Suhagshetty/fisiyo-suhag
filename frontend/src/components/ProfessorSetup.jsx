@@ -18,6 +18,8 @@ const ProfessorSetup = () => {
   const location = useLocation();
   const { user, formData: initialFormData } = location.state || {};
   const navigate = useNavigate();
+ 
+  const role = location.state?.role; // "Student/Enthu"
 
   const [formData, setFormData] = useState({
     ...initialFormData,
