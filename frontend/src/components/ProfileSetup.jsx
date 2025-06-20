@@ -115,10 +115,10 @@ const ProfileSetup = () => {
     }
   };
 
-  const handleRoleSelect = (role) => {
-    setFormData({ ...formData, role });
-    setCurrentStep("personal");
-  };
+  // const handleRoleSelect = (role) => {
+  //   setFormData({ ...formData, role });
+  //   setCurrentStep("personal");
+  // };
 
   const handlePersonalInfoNext = () => {
     if (formData.name && formData.handle && formData.gender && formData.age) {
@@ -202,7 +202,9 @@ const ProfileSetup = () => {
         handle: formData.handle,
         gender: formData.gender,
         age: parseInt(formData.age),
-        role: mapRole(formData.role),
+        role: formData.role === "Explorer" 
+        ? "explorer" 
+        : formData.role.toLowerCase(),
         interests: formData.interests,
         profilePicture: profilePictureUrl, // Add profile picture URL
       };
@@ -244,17 +246,18 @@ const ProfileSetup = () => {
     }
   };
 
-  const mapRole = (role) => {
+  const handleRoleSelect = (role) => {
     setFormData({ ...formData, role });
+
     if (role === "Student/Enthu") {
       navigate("/student-setup", { state: { role } });
     } else if (role === "Professor") {
       navigate("/professor-setup", { state: { role } });
     } else {
-      return "explorer";
+      // For Explorer, just move to next step
+      setCurrentStep("personal");
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#AD49E1]/5 via-white to-[#AD49E1]/8">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
