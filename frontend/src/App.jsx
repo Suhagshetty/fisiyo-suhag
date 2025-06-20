@@ -17,6 +17,7 @@ import ProfilePage from "./components/ProfilePage";
 import PollDetail from "./components/PollDetail";
 import AdminApprovePosts from "./components/AdminApprovePosts";
 import ProfessorSetup from "./components/ProfessorSetup";
+import StudentSetup from "./components/StudentSetup";
 import NotificationSection from "./components/NotificationSection";
 
 function App() {
@@ -42,7 +43,7 @@ function App() {
         <Route path="/n/:name" element={<ProfilePage />} />
         <Route path="/admin/approve-posts" element={<AdminApprovePosts />} />
         <Route path="/professor-setup" element={<ProfessorSetup />} />
-        {/* <Route path="/student-setup" element={<StudentSetup />} /> */}
+        <Route path="/student-setup" element={<StudentSetup />} />
       </Routes>
 
       {/* Modal routes - only render when modal state is present */}

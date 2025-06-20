@@ -7,6 +7,7 @@ import commintyRoutes from "./routes/communities.js";
 import pollRoutes from "./routes/Poll.js";
 import ProfessorRoutes from "./routes/professor.js";
 import NotificationRoutes from "./routes/notification.js";
+import StudentRoutes from "./routes/student.js"
 import fs from "fs";
 import csv from "csv-parser";
 
@@ -89,6 +90,7 @@ app.use("/api/communities", commintyRoutes);
 app.use("/api/polls", pollRoutes);
 app.use("/api/notifications", NotificationRoutes);
 app.use("/api/professors", ProfessorRoutes);
+app.use("/api/students", StudentRoutes);
 
 // Upload route
 app.post("/upload", upload.single("file"), async (req, res) => {

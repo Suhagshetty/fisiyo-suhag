@@ -247,7 +247,12 @@ const ProfileSetup = () => {
     setFormData({ ...formData, role });
 
     if (role === "Student/Enthu") {
-      navigate("/student-setup", { state: { role } });
+      navigate("/student-setup", {
+        state: {
+          role,
+          authUser: user, // Pass auth0 user object
+        },
+      });
     } else if (role === "Professor") {
       navigate("/professor-setup", {
         state: {
