@@ -12,8 +12,7 @@ import CommunityErrorState from "../components/CommunityErrorState";
 import CommunityEmptyState from "../components/CommunityEmptyState";  
 import {
   joinCommunity,
-  leaveCommunity,
-  checkMembership,
+  leaveCommunity, 
 } from "../api/communityApi";
 
 const CommunityPage = () => {
@@ -26,8 +25,9 @@ const CommunityPage = () => {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(false);
+  const [localMembership, setLocalMembership] = useState(false);
 
-  const { community, isLoading, error } = useCommunityData(name);
+  const { community, isLoading, error } = useCommunityData(name); 
 
   const {
     expandedPosts,
@@ -48,25 +48,15 @@ const CommunityPage = () => {
     setDownvoteCounts,
   } = useFeedData(currentUser, user);
 
-  useEffect(() => {
-    if (community?._id && currentUser?._id) {
-      const checkUserMembership = async () => {
-        setMembershipLoading(true);
-        try {
-          const token = await getAccessTokenSilently(); // Get token
-          const memberStatus = await checkMembership(community._id, token); // Pass token
-          setIsMember(memberStatus);
-        } catch (error) {
-          console.error("Error checking membership:", error);
-        } finally {
-          setMembershipLoading(false);
-        }
-      };
 
-      checkUserMembership();
+  useEffect(() => {
+    if (community && currentUser) {
+      const memberStatus = community.members.some(
+        (member) => member._id === currentUser._id
+      );
+      setLocalMembership(memberStatus);
     }
   }, [community, currentUser]);
-
 
 
   const handleJoin = async () => {
@@ -75,30 +65,30 @@ const CommunityPage = () => {
       return;
     }
 
-    try {
-      setMembershipLoading(true);
+    // Optimistic UI update
+    setLocalMembership(true);
 
+    try {
       const token = await getAccessTokenSilently();
-      await joinCommunity(community._id, token);  
-      setIsMember(true);
-      // Remove setCommunity calls
+      await joinCommunity(community._id, token);
     } catch (error) {
       console.error("Join error:", error);
-    } finally {
-      setMembershipLoading(false);
+      // Revert on error
+      setLocalMembership(false);
     }
   };
 
   const handleLeave = async () => {
+    // Optimistic UI update
+    setLocalMembership(false);
+
     try {
-      setMembershipLoading(true);
-      await leaveCommunity(community._id);
-      setIsMember(false);
-      // Remove setCommunity calls
+      const token = await getAccessTokenSilently();
+      await leaveCommunity(community._id, token);
     } catch (error) {
       console.error("Leave error:", error);
-    } finally {
-      setMembershipLoading(false);
+      // Revert on error
+      setLocalMembership(true);
     }
   };
 
@@ -173,10 +163,9 @@ const CommunityPage = () => {
     <div className="min-h-screen bg-[#0a0a0a] text-[#e1e1e1]">
       <CommunityBanner
         community={community}
-        isMember={isMember}
+        isMember={localMembership}
         onJoin={handleJoin}
         onLeave={handleLeave}
-        isLoading={membershipLoading}
       />
 
       {isAuthenticated && (

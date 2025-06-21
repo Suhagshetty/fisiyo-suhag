@@ -45,7 +45,6 @@ const PostLoginCheck = () => {
  
   useEffect(() => {
     if (!isAuthenticated || isLoading || !animationCompleted) return;
-
     const checkUser = async () => {
       const userId = user?.sub?.split("|")[1];
       if (!userId) {
@@ -54,20 +53,40 @@ const PostLoginCheck = () => {
       }
 
       try {
-        const res = await fetch(`http://localhost:3000/api/users/${userId}`);
-        if (res.ok) {
-          const userData = await res.json();
+        // Try user endpoint first
+        const userRes = await fetch(
+          `http://localhost:3000/api/users/${userId}`
+        );
+
+        if (userRes.ok) {
+          const userData = await userRes.json();
           navigate("/feed", { state: { user: userData } });
-        } else if (res.status === 404) {
-          navigate("/setup");
-        } else {
-          console.error("Unexpected server response");
+          return;
         }
+
+        // If user not found, try professor endpoint
+        if (userRes.status === 404) {
+          const professorRes = await fetch(
+            `http://localhost:3000/api/professors/${userId}`
+          );
+
+          if (professorRes.ok) {
+            const professorData = await professorRes.json();
+            navigate("/feed", { state: { user: professorData } });
+            return;
+          }
+
+          if (professorRes.status === 404) {
+            navigate("/setup");
+            return;
+          }
+        }
+
+        console.error("Unexpected server response");
       } catch (err) {
         console.error("Error checking user:", err);
       }
     };
-
     checkUser();
   }, [isAuthenticated, isLoading, animationCompleted, user, navigate]);
 

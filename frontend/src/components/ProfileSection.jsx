@@ -9,22 +9,28 @@ const ProfileSection = ({ isAuthenticated, currentUser }) => {
     ? `https://xeadzuobunjecdivltiu.supabase.co/storage/v1/object/public/posts/uploads/${currentUser.profilePicture}`
     : "/default-avatar.png";
 
+  // Determine profile link based on user role
+  const getProfileLink = () => {
+    if (!isAuthenticated) return "#";
+
+    return currentUser?.role === "explorer"
+      ? `/n/${currentUser?.handle}`
+      : `/professor/${currentUser?.handle}`;
+  };
+
+  // Prepare state data for route
+  const routeState = isAuthenticated
+    ? { user: currentUser, handle: currentUser?.handle }
+    : {};
+
   return (
     <div className="flex items-center gap-0 sm:gap-4">
-      {/* Notification Section */}
       <NotificationSection
         isAuthenticated={isAuthenticated}
         currentUser={currentUser}
       />
 
-      {/* Profile Button */}
-      <Link
-        to={isAuthenticated ? `/n/${currentUser?.handle}` : "#"}
-        state={
-          isAuthenticated
-            ? { user: currentUser, handle: currentUser?.handle }
-            : {}
-        }>
+      <Link to={getProfileLink()} state={routeState}>
         <div
           className={`hover:bg-[#1a1a1a] px-2 sm:px-3 py-2 rounded-xl transition-all duration-300 ${baseCursor}`}>
           <img

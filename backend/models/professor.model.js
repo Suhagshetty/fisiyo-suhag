@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const professorSchema = new mongoose.Schema(
   {
     // Base user fields (unchanged)
@@ -27,11 +28,16 @@ const professorSchema = new mongoose.Schema(
       type: String,
       enum: ["male", "female", "other", "prefer not to say"],
       default: "prefer not to say",
+    }, 
+    occupation: {
+      type: String,
+      enum: ["Student", "Working", "Prefer not to say"],
+      required: true,
     },
     role: {
       type: String,
       default: "professor",
-      immutable: true, // Prevents accidental role change
+      immutable: true, 
     },
     age: {
       type: Number,

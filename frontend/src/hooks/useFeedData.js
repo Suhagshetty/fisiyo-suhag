@@ -63,25 +63,25 @@ export default function useFeedData(currentUser, user) {
     }
   }, [posts, currentUser, user]);
 
-  useEffect(() => {
-    const fetchSavedPosts = async () => {
-      if (currentUser?._id) {
-        try {
-          const response = await fetch(
-            `http://localhost:3000/api/users/saved-posts/${currentUser._id}`
-          );
-          if (response.ok) {
-            const saved = await response.json();
-            setSavedPosts(new Set(saved.map((post) => post._id)));
-          }
-        } catch (error) {
-          console.error("Error loading saved posts:", error);
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const fetchSavedPosts = async () => {
+  //     if (currentUser?._id) {
+  //       try {
+  //         const response = await fetch(
+  //           `http://localhost:3000/api/users/saved-posts/${currentUser._id}`
+  //         );
+  //         if (response.ok) {
+  //           const saved = await response.json();
+  //           setSavedPosts(new Set(saved.map((post) => post._id)));
+  //         }
+  //       } catch (error) {
+  //         console.error("Error loading saved posts:", error);
+  //       }
+  //     }
+  //   };
 
-    fetchSavedPosts();
-  }, [currentUser]);
+  //   fetchSavedPosts();
+  // }, [currentUser]);
 
   useEffect(() => {
     if (posts.length > 0) {
@@ -132,6 +132,72 @@ export default function useFeedData(currentUser, user) {
     fetchPolls();
   }, []);
 
+  // const handleSavePost = async (postId) => {
+  //   if (!currentUser?._id) return;
+
+  //   const isCurrentlySaved = savedPosts.has(postId);
+  //   const newSavedPosts = new Set(savedPosts);
+
+  //   // Optimistic UI update
+  //   if (isCurrentlySaved) {
+  //     newSavedPosts.delete(postId);
+  //   } else {
+  //     newSavedPosts.add(postId);
+  //   }
+  //   setSavedPosts(newSavedPosts);
+
+  //   try {
+  //     const endpoint = isCurrentlySaved
+  //       ? "http://localhost:3000/api/users/unsave-post"
+  //       : "http://localhost:3000/api/users/save-post";
+
+  //     const response = await fetch(endpoint, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         userId: currentUser._id,
+  //         postId,
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(
+  //         `Failed to ${isCurrentlySaved ? "unsave" : "save"} post`
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     // Revert on error
+  //     setSavedPosts(savedPosts);
+  //   }
+  // };
+
+  // ... existing code ...
+
+  useEffect(() => {
+    const fetchSavedPosts = async () => {
+      if (currentUser?._id) {
+        try {
+          // Determine endpoint based on user role
+          const endpoint =
+            currentUser.role === "professor"
+              ? `http://localhost:3000/api/professors/saved-posts/${currentUser._id}`
+              : `http://localhost:3000/api/users/saved-posts/${currentUser._id}`;
+
+          const response = await fetch(endpoint);
+          if (response.ok) {
+            const saved = await response.json();
+            setSavedPosts(new Set(saved.map((post) => post._id)));
+          }
+        } catch (error) {
+          console.error("Error loading saved posts:", error);
+        }
+      }
+    };
+
+    fetchSavedPosts();
+  }, [currentUser]);
+
   const handleSavePost = async (postId) => {
     if (!currentUser?._id) return;
 
@@ -147,9 +213,15 @@ export default function useFeedData(currentUser, user) {
     setSavedPosts(newSavedPosts);
 
     try {
+      // Determine base endpoint based on role
+      const baseEndpoint =
+        currentUser.role === "professor"
+          ? "http://localhost:3000/api/professors"
+          : "http://localhost:3000/api/users";
+
       const endpoint = isCurrentlySaved
-        ? "http://localhost:3000/api/users/unsave-post"
-        : "http://localhost:3000/api/users/save-post";
+        ? `${baseEndpoint}/unsave-post`
+        : `${baseEndpoint}/save-post`;
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -171,6 +243,8 @@ export default function useFeedData(currentUser, user) {
       setSavedPosts(savedPosts);
     }
   };
+
+  // ... rest of the hook ...
 
   // Updated handleVote function to manage separate counts
   const handleVote = async (postId, voteType) => {

@@ -18,6 +18,7 @@ import PollDetail from "./components/PollDetail";
 import AdminApprovePosts from "./components/AdminApprovePosts";
 import ProfessorSetup from "./components/ProfessorSetup";
 import StudentSetup from "./components/StudentSetup";
+import ProfessorPage from "./components/ProfessorProfilePage";
 import NotificationSection from "./components/NotificationSection";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Route path="/community-setup" element={<CommunityCreator />} />
         <Route path="/c/:name" element={<CommunityPage />} />
         <Route path="/n/:name" element={<ProfilePage />} />
+        <Route path="/professor/:name" element={<ProfessorPage />} />
         <Route path="/admin/approve-posts" element={<AdminApprovePosts />} />
         <Route path="/professor-setup" element={<ProfessorSetup />} />
         <Route path="/student-setup" element={<StudentSetup />} />

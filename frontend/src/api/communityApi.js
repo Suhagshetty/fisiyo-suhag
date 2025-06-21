@@ -34,21 +34,3 @@ export const leaveCommunity = async (communityId, accessToken) => {
     throw error.response?.data?.error || "Failed to leave community";
   }
 };
-
-export const checkMembership = async (communityId, accessToken) => {
-  try {
-    const response = await axios.get(
-      `http://localhost:3000/api/communities/${communityId}/membership`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`, // Add header
-        },
-      }
-    );
-    return response.data.isMember;
-  } catch (error) {
-    console.error("Error checking membership:", error);
-    return false;
-  }
-};

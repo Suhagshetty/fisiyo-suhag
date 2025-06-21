@@ -29,6 +29,11 @@ const studentSchema = new mongoose.Schema(
       enum: ["male", "female", "other", "prefer not to say"],
       default: "prefer not to say",
     },
+    occupation: {
+      type: String,
+      enum: ["Student", "Working", "Prefer not to say"],
+      required: true,
+    },
     role: {
       type: String,
       default: "student",

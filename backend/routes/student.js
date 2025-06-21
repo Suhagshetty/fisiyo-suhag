@@ -13,6 +13,7 @@ router.post("/", async (req, res) => {
       email: req.body.email,
       handle: req.body.handle,
       gender: req.body.gender,
+      occupation: req.body.occupation,
       age: req.body.age,
       role: "student",
       interests: req.body.interests,
@@ -35,6 +36,7 @@ router.post("/", async (req, res) => {
       "institutionName",
       "institutionRegNumber",
       "currentGradeYear",
+      "occupation",
     ];
 
     const missingFields = requiredFields.filter((field) => !studentData[field]);
