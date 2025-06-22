@@ -12,6 +12,7 @@ router.post("/", async (req, res) => {
       email: req.body.email,
       role: req.body.role,
       interests: req.body.interests,
+      phoneNumber: req.body.phoneNumber,
       handle: req.body.handle,
       gender: req.body.gender,
       age: req.body.age,

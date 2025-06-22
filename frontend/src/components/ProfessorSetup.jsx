@@ -153,6 +153,7 @@ const ProfessorSetup = () => {
         occupation: formData.occupation,
         role: role.toLowerCase(),
         interests: formData.interests,
+        phoneNumber: formData.phoneNumber,
         profilePicture: profilePictureUrl,
         institution: {
           name: formData.institutionName,

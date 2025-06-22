@@ -156,6 +156,7 @@ const StudentSetup = () => {
         occupation: formData.occupation,
         role: "student",
         interests: formData.interests,
+        phoneNumber: formData.phoneNumber,
         profilePicture: profilePictureUrl,
         educationLevel: formData.educationLevel,
         institutionName: formData.institutionName,

@@ -34,6 +34,10 @@ const studentSchema = new mongoose.Schema(
       enum: ["Student", "Working", "Prefer not to say"],
       required: true,
     },
+    phoneNumber: {
+      type: String,
+      default: "",
+    },
     role: {
       type: String,
       default: "student",

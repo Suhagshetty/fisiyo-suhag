@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   Shield,
@@ -13,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   ChevronLeft,
+  Phone, // Add Phone icon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -25,6 +28,7 @@ const ProfileSetup = () => {
     handle: "",
     gender: "",
     age: "",
+    phoneNumber: "", // Add phone number field
     occupation: "",
     role: "",
     interests: [],
@@ -61,6 +65,66 @@ const ProfileSetup = () => {
     "Immunology",
     "Data Science",
   ];
+
+  const createGuestAccount = async () => {
+    setIsUploading(true);
+    try {
+      let profilePictureUrl = null;
+
+      // Upload profile picture using the same API as regular users
+      if (formData.profilePicture) {
+        const imageFormData = new FormData();
+        imageFormData.append("file", formData.profilePicture);
+
+        const uploadResponse = await axios.post(
+          `http://localhost:3000/upload`,
+          imageFormData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        profilePictureUrl = uploadResponse.data.downloadUrl;
+      }
+
+      const guestData = {
+        name: formData.name,
+        email: user.email,
+        age: formData.age,
+        gender: formData.gender,
+        occupation: formData.occupation,
+        phoneNumber: formData.phoneNumber,
+        interests: formData.interests,
+        profilePicture: profilePictureUrl,
+      };
+
+      console.log(guestData);
+      
+
+      const response = await axios.post(
+        "http://localhost:3000/api/guests",
+        guestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const guest = response.data;
+      navigate("/feed", {
+        state: {
+          user: {
+            ...guest,
+            role: "guest",
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Guest login failed:", error);
+      alert("Guest login failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -112,7 +176,8 @@ const ProfileSetup = () => {
       formData.name &&
       formData.gender &&
       formData.age &&
-      formData.occupation
+      formData.occupation &&
+      formData.phoneNumber
     ) {
       setCurrentStep("interests");
     }
@@ -159,9 +224,7 @@ const ProfileSetup = () => {
       navigate("/student-setup", { state: { formData, role } });
     } else if (role === "Professor") {
       navigate("/professor-setup", { state: { formData, role } });
-    } else {
-      // For Explorer, submit directly
-      submitProfile();
+    } else {return
     }
   };
 
@@ -197,6 +260,7 @@ const ProfileSetup = () => {
         gender: formData.gender,
         age: parseInt(formData.age),
         occupation: formData.occupation,
+        phoneNumber: formData.phoneNumber,
         role:
           formData.role === "Explorer"
             ? "explorer"
@@ -397,6 +461,23 @@ const ProfileSetup = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Phone className="w-4 h-4 text-[#49B8E1]" />
+                  Phone Number
+                </label>
+                <PhoneInput
+                  international
+                  defaultCountry="US"
+                  value={formData.phoneNumber}
+                  onChange={(value) =>
+                    setFormData({ ...formData, phoneNumber: value })
+                  }
+                  className="w-full"
+                  inputClassName="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#49B8E1] focus:ring-2 focus:ring-[#49B8E1]/20 transition-all bg-white/80 backdrop-blur-sm"
+                />
+              </div>
+
               {/* Occupation Field */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -594,7 +675,6 @@ const ProfileSetup = () => {
                 Choose how you'll engage with our community
               </p>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {roles.map((role) => {
                 const isSelected = formData.role === role;
@@ -633,6 +713,38 @@ const ProfileSetup = () => {
                 );
               })}
             </div>
+
+            {formData.role !== "Explorer" && (
+              <div className="text-center mt-6">
+                <button
+                  onClick={createGuestAccount}
+                  disabled={isUploading}
+                  className={`
+              px-6 py-3 rounded-lg border transition-colors
+              text-base font-medium
+              ${
+                isUploading
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-[#49B8E1] border-[#49B8E1] hover:bg-[#49B8E1]/10"
+              }
+            `}>
+                  {isUploading ? (
+                    <span className="flex items-center justify-center">
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating Guest Profile...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <User className="mr-2 h-5 w-5" />
+                      Continue as Guest
+                    </span>
+                  )}
+                </button>
+                <p className="mt-2 text-sm text-gray-500">
+                  You'll have limited access but can upgrade anytime
+                </p>
+              </div>
+            )}
 
             {/* Explorer handle input */}
             {formData.role === "Explorer" && (

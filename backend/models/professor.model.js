@@ -28,16 +28,20 @@ const professorSchema = new mongoose.Schema(
       type: String,
       enum: ["male", "female", "other", "prefer not to say"],
       default: "prefer not to say",
-    }, 
+    },
     occupation: {
       type: String,
       enum: ["Student", "Working", "Prefer not to say"],
       required: true,
     },
+    phoneNumber: {
+      type: String,
+      default: "",
+    },
     role: {
       type: String,
       default: "professor",
-      immutable: true, 
+      immutable: true,
     },
     age: {
       type: Number,

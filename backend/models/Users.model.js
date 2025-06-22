@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
     enum: ["male", "female", "other", "prefer not to say"],
     default: "prefer not to say",
   },
+  phoneNumber: {
+    type: String,
+    required: true
+  },
   role: {
     type: String,
     enum: ["user", "professor", "explorer"],

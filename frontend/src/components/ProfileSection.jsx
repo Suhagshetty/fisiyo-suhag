@@ -13,9 +13,9 @@ const ProfileSection = ({ isAuthenticated, currentUser }) => {
   const getProfileLink = () => {
     if (!isAuthenticated) return "#";
 
-    return currentUser?.role === "explorer"
-      ? `/n/${currentUser?.handle}`
-      : `/professor/${currentUser?.handle}`;
+    return currentUser?.role === "professor"
+    ? `/professor/${currentUser?.handle}`
+    : `/n/${currentUser?.handle}`;
   };
 
   // Prepare state data for route
